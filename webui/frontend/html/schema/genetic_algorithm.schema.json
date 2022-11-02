@@ -1,0 +1,92 @@
+{
+  "title" : "Genetic Algorithm",
+  "type" : "object",
+  "required" : ["population", "epoch", "elitism", "save", "scale", "selector"],
+  "properties" : {
+    "population" : {
+      "type" : "number",
+      "default" : 20
+    },
+    "epoch" : {
+      "type" : "number",
+      "default" : 2500
+    },
+    "save" : {
+      "type" : "number",
+      "default" : 1
+    },
+    "elitism" : {
+      "type" : "number",
+      "default" : 1
+    },
+    "scale" : {
+      "type" : "string",
+      "enum" : ["y=x", "y=x^2"],
+      "default" : "y=x"
+    },
+    "selector" : {
+      "type" : "object",
+      "required" : ["name", "config"],
+      "properties" : {
+        "name" : {
+          "type" : "string",
+          "enum" : ["species", "roulet", "elite"],
+          "default" : "species"
+        }
+      },
+      "dependencies" : {
+        "name" : {
+          "oneOf" : [
+            {
+              "properties" : {
+                "name" : { "enum" : ["species"] },
+                "config" : {
+                  "type" : "object",
+                  "required" : ["species_distance", "elitism", "min_species_size"],
+                  "properties" : {
+                    "species_distance" : {
+                      "type" : "number",
+                      "default" : 1
+                    },
+                    "elitism" : {
+                      "type" : "number",
+                      "default" : 1
+                    },
+                    "min_species_size" : {
+                      "type" : "number",
+                      "default" : 1
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "properties" : {
+                "name" : { "enum" : ["roulet"] },
+                "config" : {
+                  "type" : "object",
+                  "required" : []
+                }
+              }
+            },
+            {
+              "properties" : {
+                "name" : { "enum" : ["elite"] },
+                "config" : {
+                  "type" : "object",
+                  "required" : ["elitism"],
+                  "properties" : {
+                    "elitism" : {
+                      "type" : "number",
+                      "default" : 1
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

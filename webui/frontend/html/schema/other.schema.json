@@ -1,0 +1,53 @@
+{
+  "title" : "Others",
+  "type" : "object",
+  "required" : ["devnet_extensions", "observe_epochs", "name", "description"],
+  "properties" : {
+    "devnet_extensions" : {
+      "type" : "object",
+      "required" : [
+        "enable_evolving_neurocomponents_position",
+        "enable_activation_function",
+        "enable_input_step",
+        "enable_unevolving_devnet",
+        "enable_sharing_solver_net",
+        "enable_devrule_per_neurocomponent"
+      ],
+      "properties" : {
+        "enable_evolving_neurocomponents_position" : {
+          "type" : "boolean",
+          "default" : true
+        },
+        "enable_activation_function" : {
+          "type" : "boolean",
+          "default" : true
+        },
+        "enable_input_step" : {
+          "type" : "boolean",
+          "default" : false
+        },
+        "enable_unevolving_devnet" : {
+          "type" : "boolean",
+          "default" : false
+        },
+        "enable_sharing_solver_net" : {
+          "type" : "boolean",
+          "default" : false
+        },
+        "enable_devrule_per_neurocomponent" : {
+          "type" : "boolean",
+          "default" : false
+        }
+      }
+    },
+    "observe_epochs" : {
+      "type" : "array",
+      "items" : {
+        "type" : "number"
+      },
+      "default" : [0]
+    },
+    "name" : { "type" : "string" },
+    "description" : { "type" : "string" }
+  }
+}

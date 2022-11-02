@@ -1,0 +1,298 @@
+{
+  "title" : "Task Setting",
+  "description" : "create the setting of tasks",
+  "type" : "object",
+  "required" : ["schedule", "tasks"],
+  "properties": {
+    "schedule" : {
+      "type" : "array",
+      "title": "schedule",
+      "description": "This configuration can determine the tasks schedule by the indices of tasks",
+      "items" : {
+        "type" : "number",
+        "default" : 0
+      },
+      "default" : [0]
+    },
+    "tasks" : {
+      "type" : "array",
+      "title": "tasks",
+      "description": "This configuration can determine the behaviour of each task",
+      "items" : {
+        "$ref": "#/definitions/task"
+      }
+    }
+  },
+  "definitions": {
+    "task" : {
+      "type" : "object",
+      "required": ["name", "setting"],
+      "properties" : {
+        "name" : {
+          "type" : "string",
+          "enum" : ["cartpole", "space_feed"]
+        }
+      },
+      "dependencies": {
+        "name" : {
+          "oneOf": [
+            {
+              "properties": {
+                "name" : { "enum" : ["cartpole"] },
+                "setting" : {
+                  "$ref" : "#/definitions/cartpole"
+                }
+              }
+            },
+            {
+              "properties": {
+                "name" : { "enum" : ["space_feed"] },
+                "setting" : {
+                  "$ref" : "#/definitions/space_feed"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "cartpole" : {
+      "type" : "object",
+      "required": ["g", "dt", "cart_weight", "cart_viscous_resistance", "pole_num", "poles"],
+      "properties": {
+        "g" : {
+          "type" : "number",
+          "default" : 9.8
+        },
+        "dt" : {
+          "type" : "number",
+          "default" : 0.01
+        },
+        "cart_weight" : {
+          "type" : "number",
+          "default" : 100
+        },
+        "cart_viscous_resistance" : {
+          "type" : "number",
+          "default" : 0.01
+        },
+        "pole_num" : {
+          "type" : "number",
+          "default" : 1
+        },
+        "poles" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "required": ["pole_angle", "pole_length", "pole_weight", "pole_viscous_resistance"],
+            "properties" : {
+              "pole_angle" : {
+                "type" : "number",
+                "default" : 0
+              },
+              "pole_length" : {
+                "type" : "number",
+                "default" : 2
+              },
+              "pole_weight" : {
+                "type" : "number",
+                "default" : 2
+              },
+              "pole_viscous_resistance" : {
+                "type" : "number",
+                "default" : 0.01
+              }
+            }
+          },
+          "default" : [{
+            "pole_angle" : 0,
+            "pole_length" : 2,
+            "pole_weight" : 2,
+            "pole_viscous_resistance" : 0.01
+          }]
+        }
+      }
+    },
+    "space_feed" : {
+      "type" : "object",
+      "required" : ["width", "height", "agent_velocity", "num_feeds", "num_poisons", "dead_threshold", "type"],
+      "properties": {
+        "width" : {
+          "type" : "number",
+          "default" : 10
+        },
+        "height" : {
+          "type" : "number",
+          "default" : 10
+        },
+        "agent_velocity" : {
+          "type" : "number",
+          "default" : 0.1
+        },
+        "num_feeds" : {
+          "type" : "number",
+          "default" : 1
+        },
+        "num_poisons" : {
+          "type" : "number",
+          "default" : 1
+        },
+        "dead_threshold" : {
+          "type" : "number",
+          "default" : 1
+        },
+        "type" : {
+          "type" : "number",
+          "enum" : [1, 2, 3],
+          "default" : 1
+        }
+      },
+      "dependencies": {
+        "type" : {
+          "oneOf": [
+            {
+              "properties": {
+                "type" : { "enum": [2, 3] },
+                "max_steps" : {
+                  "type" : "number",
+                  "default" : 200
+                }
+              }
+            },
+            {
+              "properties": {
+                "type" : { "enum": [1] },
+                "judge_steps" : {
+                  "type" : "number",
+                  "default" : 5
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "space_feed2" : {
+      "type" : "object",
+      "required" : ["width", "height", "agent_velocity", "agent_rotate_velocity", "num_feeds", "num_poisons", "dead_threshold", "type"],
+      "properties": {
+        "width" : {
+          "type" : "number",
+          "default" : 10
+        },
+        "height" : {
+          "type" : "number",
+          "default" : 10
+        },
+        "agent_velocity" : {
+          "type" : "number",
+          "default" : 0.1
+        },
+        "agent_rotate_velocity" : {
+          "type" : "number",
+          "default" : 0.1
+        },
+        "num_feeds" : {
+          "type" : "number",
+          "default" : 1
+        },
+        "num_poisons" : {
+          "type" : "number",
+          "default" : 1
+        },
+        "dead_threshold" : {
+          "type" : "number",
+          "default" : 1
+        },
+        "type" : {
+          "type" : "number",
+          "enum" : [1, 2, 3],
+          "default" : 1
+        }
+      },
+      "dependencies": {
+        "type" : {
+          "oneOf": [
+            {
+              "properties": {
+                "type" : { "enum": [2, 3] },
+                "max_steps" : {
+                  "type" : "number",
+                  "default" : 200
+                }
+              }
+            },
+            {
+              "properties": {
+                "type" : { "enum": [1] },
+                "judge_steps" : {
+                  "type" : "number",
+                  "default" : 5
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "space_feed3" : {
+      "type" : "object",
+      "required" : ["width", "height", "agent_velocity", "num_feeds", "num_poisons", "dead_threshold", "type"],
+      "properties": {
+        "width" : {
+          "type" : "number",
+          "default" : 10
+        },
+        "height" : {
+          "type" : "number",
+          "default" : 10
+        },
+        "agent_velocity" : {
+          "type" : "number",
+          "default" : 0.1
+        },
+        "num_feeds" : {
+          "type" : "number",
+          "default" : 1
+        },
+        "num_poisons" : {
+          "type" : "number",
+          "default" : 1
+        },
+        "dead_threshold" : {
+          "type" : "number",
+          "default" : 1
+        },
+        "type" : {
+          "type" : "number",
+          "enum" : [1, 2, 3],
+          "default" : 1
+        }
+      },
+      "dependencies": {
+        "type" : {
+          "oneOf": [
+            {
+              "properties": {
+                "type" : { "enum": [2, 3] },
+                "max_steps" : {
+                  "type" : "number",
+                  "default" : 200
+                }
+              }
+            },
+            {
+              "properties": {
+                "type" : { "enum": [1] },
+                "judge_steps" : {
+                  "type" : "number",
+                  "default" : 5
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

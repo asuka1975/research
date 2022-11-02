@@ -1,0 +1,91 @@
+version: '3'
+
+services:
+  jupyter:
+    build: 
+      context: jupyter/
+      args:
+        UID: 1000
+        GID: 1000
+        USERNAME: shikina
+        GROUPNAME: shikina
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia 
+              count: 1
+              capabilities: [gpu]
+    ports:
+      - "8889:8889"
+    volumes:
+      - type: bind
+        source: "./archive"
+        target: "/opt/app/archive"
+      - type: bind
+        source: "./jupyter/research"
+        target: "/opt/app/research"
+      - type: bind
+        source: "./settings"
+        target: "/opt/app/settings"
+      - type: bind
+        source: "./unuse_setting"
+        target: "/opt/app/unuse_setting"
+      - type: bind
+        source: "/tmp/.X11-unix"
+        target: "/tmp/.X11-unix"
+    environment:
+      - DISPLAY=:1
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    restart: always
+  environment:
+    build:
+      context: environment/
+      args:
+        UID: 1000
+        GID: 1000
+        USERNAME: shikina
+        GROUPNAME: shikina
+    volumes:
+      - type: bind
+        source: "./archive"
+        target: "/opt/app/archive"
+      - type: bind
+        source: "./settings"
+        target: "/opt/app/settings"
+      - type: bind
+        source: "./unuse_setting"
+        target: "/opt/app/unuse_setting"
+      - type: bind
+        source: "./scripts"
+        target: "/opt/app/scripts"
+      - type: bind
+        source: "./schedule"
+        target: "/opt/app/schedule"
+    restart: always
+  webui_backend:
+    build:
+      context: webui/backend/
+    volumes:
+      - type: bind
+        source: "./settings"
+        target: "/opt/app/settings"
+      - type: bind
+        source: "./unuse_setting"
+        target: "/opt/app/unuse_setting"
+      - type: bind
+        source: "./schedule"
+        target: "/opt/app/schedule"
+    ports:
+      - "51223:51223"
+    restart: always
+  webui_frontend:
+    build:
+      context: webui/frontend/
+    ports:
+      - "51224:51224"
+    volumes:
+      - type: bind
+        source: "./webui/frontend/html"
+        target: "/opt/app/html"
+    restart: always

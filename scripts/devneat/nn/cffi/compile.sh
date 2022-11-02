@@ -1,0 +1,2 @@
+# g++ -Iインクルードパス（Python） -DPIC -shared -fPIC -o モジュール名.so(Pythonから参照するライブラリ) モジュール名.cpp(C++ソースファイル) -lboost_python(Pythonバージョン)
+g++ -I`python3 -c 'from sysconfig import get_path; print(get_path("include"))'` -O2 -Wall -Wextra -DPIC -shared -fPIC -o $1.so $1.cpp -lboost_python310

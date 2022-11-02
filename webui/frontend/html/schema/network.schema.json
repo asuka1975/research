@@ -1,0 +1,176 @@
+{
+  "title" : "Network setting",
+  "type" : "object",
+  "required" : ["num_hidden", "num_init_conns", "bias_init_stdev", "bias_init_mean", "bias_mutate_rate",
+    "activation_mutate_rate", "enable_mutate_rate", "weight_mutate_rate", "conn_add_prob", "conn_delete_prob",
+    "node_add_prob", "node_delete_prob", "network_type", "crossover_config", "activation_functions"],
+  "properties" : {
+    "num_hidden" : {
+      "type" : "number",
+      "default" : 10
+    },
+    "num_init_conns" : {
+      "type" : "number",
+      "default" : 15
+    },
+    "bias_init_stdev" : {
+      "type" : "number",
+      "default" : 1
+    },
+    "bias_init_mean" : {
+      "type" :  "number",
+      "default" : 0
+    },
+    "bias_mutate_rate" : {
+      "type" : "number",
+      "default" : 0.01
+    },
+    "activation_mutate_rate" : {
+      "type" : "number",
+      "default" : 0.01
+    },
+    "enable_mutate_rate" : {
+      "type" : "number",
+      "default" : 0.01
+    },
+    "weight_mutate_rate" : {
+      "type" : "number",
+      "default" : 0.01
+    },
+    "conn_add_prob" : {
+      "type" : "number",
+      "default" : 0.01
+    },
+    "conn_delete_prob" : {
+      "type" : "number",
+      "default" : 0.01
+    },
+    "node_add_prob" : {
+      "type" : "number",
+      "default" : 0.01
+    },
+    "node_delete_prob" : {
+      "type" : "number",
+      "default" : 0.01
+    },
+    "activation_functions" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string",
+        "enum" : [
+          "relu",
+          "y=x",
+          "tanh",
+          "sin",
+          "cos",
+          "neg",
+          "abs",
+          "y=2x-1",
+          "gauss",
+          "signbit",
+          "sign"
+        ]
+      }
+    },
+    "network_type" : {
+      "type" : "string",
+      "enum" : ["recurrent", "feedforward", "devnetwork"],
+      "default" : "recurrent"
+    }
+  },
+  "dependencies" : {
+    "network_type" : {
+      "oneOf": [
+        {
+          "properties": {
+            "network_type" : { "enum": ["recurrent", "feedforward"] },
+            "crossover_config" : {
+              "type" : "object",
+              "required" : ["bias_crossover", "weight_crossover", "distance_constant"],
+              "properties" : {
+                "bias_crossover" : {
+                  "$ref" : "#/definitions/crossover"
+                },
+                "weight_crossover" : {
+                  "$ref" : "#/definitions/crossover"
+                },
+                "distance_constant" : {
+                  "$ref" : "#/definitions/distance_constant"
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "network_type" : { "enum": ["devnetwork"] },
+            "neighbor_num" : {
+              "type" : "number",
+              "default" : 3
+            },
+            "crossover_config" : {
+              "type" : "object",
+              "required" : ["bias_crossover", "weight_crossover", "distance_constant", "node_extra_crossover", "conn_extra_crossover"],
+              "properties" : {
+                "bias_crossover" : {
+                  "$ref" : "#/definitions/crossover"
+                },
+                "weight_crossover" : {
+                  "$ref" : "#/definitions/crossover"
+                },
+                "distance_constant" : {
+                  "$ref" : "#/definitions/distance_constant"
+                },
+                "node_extra_crossover" : {
+                  "$ref" : "#/definitions/crossover"
+                },
+                "conn_extra_crossover" : {
+                  "$ref" : "#/definitions/crossover"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "definitions" : {
+    "crossover" : {
+      "type" : "object",
+      "required" : ["name", "param"],
+      "properties" : {
+        "name" : {
+          "type" : "string",
+          "enum" : ["blx-alpha"],
+          "default" : "blx-alpha"
+        },
+        "param" : {
+          "type" : "number",
+          "default" : 0.1
+        }
+      }
+    },
+    "distance_constant" : {
+      "type" : "object",
+      "required" : ["c1", "c2", "c3", "n"],
+      "properties" : {
+        "c1" : {
+          "type" : "number",
+          "default" : 0.5
+        },
+        "c2" : {
+          "type" : "number",
+          "default" : 0.5
+        },
+        "c3" : {
+          "type" : "number",
+          "default" : 0.5
+        },
+        "n" : {
+          "type" : "number",
+          "default" : 0.5
+        }
+      }
+    }
+  }
+}
