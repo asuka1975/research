@@ -5,10 +5,10 @@ services:
     build: 
       context: jupyter/
       args:
-        UID: 1000
-        GID: 1000
-        USERNAME: shikina
-        GROUPNAME: shikina
+        UID: ${UID}
+        GID: ${GID}
+        USERNAME: ${UNAME}
+        GROUPNAME: ${GNAME}
     deploy:
       resources:
         reservations:
@@ -42,10 +42,10 @@ services:
     build:
       context: environment/
       args:
-        UID: 1000
-        GID: 1000
-        USERNAME: shikina
-        GROUPNAME: shikina
+        UID: ${UID}
+        GID: ${GID}
+        USERNAME: ${UNAME}
+        GROUPNAME: ${GNAME}
     volumes:
       - type: bind
         source: "./archive"
