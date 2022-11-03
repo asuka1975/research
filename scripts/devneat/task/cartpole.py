@@ -117,11 +117,9 @@ class CartPole:
         }
 
     def finish(self):
-        return self.steps >= self.num_steps or not (-1 < self.x < 1)
+        return self.steps >= self.num_steps
 
     def fitness(self):
-        if not (-1 < self.x < 1):
-            return -100
         return self.fitness_value
 
     def max_fitness(self):
@@ -287,9 +285,9 @@ class BrokenPoleCartPole:
 
     def get_output(self):
         if self.broken:
-            return [self.x, self.x_dot, self.theta1, self.theta1_dot, self.theta2, self.theta2_dot]
+            return [self.x, self.x_dot, cos(self.theta1), sin(self.theta1), self.theta1_dot, cos(self.theta2), sin(self.theta2), self.theta2_dot]
         else:
-            return [self.x, self.x_dot, self.theta, self.theta_dot, 0, 0]
+            return [self.x, self.x_dot, cos(self.theta), sin(self.theta), self.theta_dot, 0, 0]
 
     def state(self):
         if self.broken:
@@ -334,7 +332,7 @@ class BrokenPoleCartPole:
         return -100
 
     def num_inputs(self):
-        return 6
+        return 8
 
     def num_outputs(self):
         return 1
