@@ -364,7 +364,11 @@ class SolverNetworkView:
             num_outputs = solver["task0"][0]["num_outputs"]
         nodes = [[(node["x"], node["y"], node["energy"]) for node in n["nodes"]] if not has_num_neurocomponents else [(node["x"], node["y"], node["energy"]) for node in n["nodes"]][(num_inputs+num_outputs):] for task in solver.values() for n in task]
         indices = [(task, i) for task, networks in solver.items() for i in range(len(networks))]
-        px0, py0, energy0 = zip(*nodes[0])
+
+        if len(nodes[0]) != 0:
+            px0, py0, energy0 = zip(*nodes[0])
+        else:
+            px0, py0, energy0 = [], [], []
         sgn = lambda v: -1 if v < 0 else 1
         scaler = lambda x: x if -1 <= x <= 1 else sgn(x) * math.log10(abs(x))
 
@@ -382,7 +386,7 @@ class SolverNetworkView:
 
         if has_num_neurocomponents:
             input_nodes = [[(node["x"], node["y"], node["energy"]) for node in n["nodes"]][:num_inputs] for task in solver.values() for n in task]
-            output_nodes = [[(node["x"], node["y"], node["energy"]) for node in n["nodes"]][num_inputs:num_outputs] for task in solver.values() for n in task]
+            output_nodes = [[(node["x"], node["y"], node["energy"]) for node in n["nodes"]][num_inputs:(num_inputs+num_outputs)] for task in solver.values() for n in task]
 
             ipx0, ipy0, ienergy0 = zip(*input_nodes[0])
             ipx0 = [scaler(x) for x in ipx0]
@@ -392,13 +396,13 @@ class SolverNetworkView:
             opx0, opy0, oenergy0 = zip(*output_nodes[0])
             opx0 = [scaler(x) for x in opx0]
             opy0 = [scaler(y) for y in opy0]
-            oenergy0 = [RdBu11[int(10 * e)] if not math.osnan(e) else "#000000" for e in oenergy0]
+            oenergy0 = [RdBu11[int(10 * e)] if not math.isnan(e) else "#000000" for e in oenergy0]
 
             input_node_data_source = ColumnDataSource(data=dict(px=list(ipx0), py=list(ipy0), fill_color=ienergy0))
             output_node_data_source = ColumnDataSource(data=dict(px=list(opx0), py=list(opy0), fill_color=oenergy0))
 
-            input_node = Scatter(x="px", y="py", fill_color="fill_color", line_color="#cc6633", fill_alpha=0.5, marker="square")
-            output_node = Scatter(x="px", y="py", fill_color="fill_color", line_color="#cc6633", fill_alpha=0.5, marker="inverted_triangle")
+            input_node = Scatter(x="px", y="py", fill_color="fill_color", line_color="#cc6633", fill_alpha=0.5, size=12, marker="square")
+            output_node = Scatter(x="px", y="py", fill_color="fill_color", line_color="#cc6633", fill_alpha=0.5, size=12, marker="inverted_triangle")
             self.add_glyph(input_node_data_source, input_node)
             self.add_glyph(output_node_data_source, output_node)
 
@@ -420,7 +424,10 @@ class SolverNetworkView:
 
         def update_fig(change):
             self.title.text = f"solver network (step={change['new']})"
-            px, py, energy = zip(*nodes[change["new"]])
+            if len(nodes[change["new"]]) != 0:
+                px, py, energy = zip(*nodes[change["new"]])
+            else:
+                px, py, energy = [], [], []
             px = [scaler(x) for x in px]
             py = [scaler(y) for y in py]
             energy = [RdBu11[int(10 * e)] if not math.isnan(e) else "#000000" for e in energy]
@@ -457,7 +464,7 @@ class SolverNetworkView:
                 opx, opy, oenergy = zip(*output_nodes[change["new"]])
                 opx = [scaler(x) for x in opx]
                 opy = [scaler(y) for y in opy]
-                oenergy = [RdBu11[int(10 * e)] if not math.osnan(e) else "#000000" for e in oenergy]
+                oenergy = [RdBu11[int(10 * e)] if not math.isnan(e) else "#000000" for e in oenergy]
                 input_node_data_source.data = {
                     "px" : ipx,
                     "py" : ipy,
