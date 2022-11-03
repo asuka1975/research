@@ -117,10 +117,10 @@ class CartPole:
         }
 
     def finish(self):
-        return self.steps >= self.num_steps or not (-2 < self.x < 2)
+        return self.steps >= self.num_steps or not (-1 < self.x < 1)
 
     def fitness(self):
-        if not (-2 < self.x < 2):
+        if not (-1 < self.x < 1):
             return -100
         return self.fitness_value
 

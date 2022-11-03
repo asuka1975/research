@@ -24,8 +24,8 @@ class CartPole:
             cfg = json.load(f)
         setting = cfg["tasks"][cfg["schedule"][task_index]]["setting"]
 
-        field = figure(title="field (step=0)", plot_width=1000, plot_height=500)
-        field.x_range = Range1d(-2, 2)
+        field = figure(title="field (step=0)", plot_width=500, plot_height=500)
+        field.x_range = Range1d(-1, 1)
         field.y_range = Range1d(-1, 1)
 
         task = observe.task(task_index)
