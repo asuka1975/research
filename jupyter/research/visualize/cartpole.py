@@ -44,6 +44,10 @@ class CartPole:
                 color=["blue", "blue"]
             )
             glyph.x = t["cart_position"]
+            if math.ceil(t["cart_position"]) % 2 == 0:
+                field.x_range.start, field.x_range.end = (math.floor(t["cart_position"]), math.floor(t["cart_position"]) + 2)
+            else:
+                field.x_range.start, field.x_range.end = (math.ceil(t["cart_position"]) - 2, math.ceil(t["cart_position"]))
 
             push_notebook()
         self = field
