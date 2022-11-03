@@ -1,4 +1,4 @@
-from math import cos, sin, pi, fmod
+from math import cos, sin, pi, fmod, inf
 from random import random, randint
 
 import numpy as np
@@ -76,6 +76,7 @@ class CartPole:
     def __init__(self, config) -> None:
         self.dt = config["dt"]
         self.g = config["gravity"]
+        self.xrange = [-inf, inf] if config["range"] is None else config["range"]
         self.cart_weight = config["cart_weight"]
         self.pole_weight = config["pole_weight"]
         self.pole_length = config["pole_length"]
@@ -117,9 +118,11 @@ class CartPole:
         }
 
     def finish(self):
-        return self.steps >= self.num_steps
+        return self.steps >= self.num_steps or not (self.xrange[0] < self.x < self.xrange[1])
 
     def fitness(self):
+        if not (self.xrange[0] < self.x < self.xrange[1]):
+            return -100
         return self.fitness_value
 
     def max_fitness(self):
