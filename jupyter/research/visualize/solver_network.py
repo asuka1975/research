@@ -5,7 +5,7 @@ import networkx as nx
 from bokeh.plotting import figure, from_networkx
 from bokeh.io import push_notebook
 from bokeh.io.export import get_screenshot_as_png
-from bokeh.models import Range1d, Circle, ColumnDataSource, Arrow, NormalHead
+from bokeh.models import Range1d, Circle, ColumnDataSource, Arrow, NormalHead, Scatter
 from bokeh.palettes import RdBu11
 
 import glfw
@@ -358,8 +358,11 @@ class SolverNetworkView:
     def __new__(cls, observe: Observe):
         solver = observe.solver()
         
-        print(solver["task0"][0])
-        nodes = [[(node["x"], node["y"], node["energy"]) for node in n["nodes"]] for task in solver.values() for n in task]
+        has_num_neurocomponents = "num_inputs" in solver["task0"][0]
+        if has_num_neurocomponents:
+            num_inputs = solver["task0"][0]["num_inputs"]
+            num_outputs = solver["task0"][0]["num_outputs"]
+        nodes = [[(node["x"], node["y"], node["energy"]) for node in n["nodes"]] if not has_num_neurocomponents else [(node["x"], node["y"], node["energy"]) for node in n["nodes"]][(num_inputs+num_outputs):] for task in solver.values() for n in task]
         indices = [(task, i) for task, networks in solver.items() for i in range(len(networks))]
         px0, py0, energy0 = zip(*nodes[0])
         sgn = lambda v: -1 if v < 0 else 1
@@ -376,6 +379,29 @@ class SolverNetworkView:
             fill_color="fill_color", line_color="#cc6633", fill_alpha=0.5
         )
         self.add_glyph(node_data_source, node)
+
+        if has_num_neurocomponents:
+            input_nodes = [[(node["x"], node["y"], node["energy"]) for node in n["nodes"]][:num_inputs] for task in solver.values() for n in task]
+            output_nodes = [[(node["x"], node["y"], node["energy"]) for node in n["nodes"]][num_inputs:num_outputs] for task in solver.values() for n in task]
+
+            ipx0, ipy0, ienergy0 = zip(*input_nodes[0])
+            ipx0 = [scaler(x) for x in ipx0]
+            ipy0 = [scaler(y) for y in ipy0]
+            ienergy0 = [RdBu11[int(10 * e)] if not math.isnan(e) else "#000000" for e in ienergy0]
+            
+            opx0, opy0, oenergy0 = zip(*output_nodes[0])
+            opx0 = [scaler(x) for x in opx0]
+            opy0 = [scaler(y) for y in opy0]
+            oenergy0 = [RdBu11[int(10 * e)] if not math.osnan(e) else "#000000" for e in oenergy0]
+
+            input_node_data_source = ColumnDataSource(data=dict(px=list(ipx0), py=list(ipy0), fill_color=ienergy0))
+            output_node_data_source = ColumnDataSource(data=dict(px=list(opx0), py=list(opy0), fill_color=oenergy0))
+
+            input_node = Scatter(x="px", y="py", fill_color="fill_color", line_color="#cc6633", fill_alpha=0.5, marker="square")
+            output_node = Scatter(x="px", y="py", fill_color="fill_color", line_color="#cc6633", fill_alpha=0.5, marker="inverted_triangle")
+            self.add_glyph(input_node_data_source, input_node)
+            self.add_glyph(output_node_data_source, output_node)
+
 
         conns = [[([scaler(n["nodes"][conn["in"]]["x"]), scaler(n["nodes"][conn["out"]]["x"])], [scaler(n["nodes"][conn["in"]]["y"]), scaler(n["nodes"][conn["out"]]["y"])], conn["weight"]) for conn in n["conns"]] for task in solver.values() for n in task]
         cx0, cy0, ws0 = zip(*conns[0])
@@ -421,6 +447,26 @@ class SolverNetworkView:
                     "y_end" : [cy[i][1] for i in range(len(cy))],
                     "color" : ["blue" if w < 0 else "red" for w in ws],
                     "weight" : [4 * abs(math.tanh(w)) for w in ws]
+                }
+            if has_num_neurocomponents:
+                ipx, ipy, ienergy = zip(*input_nodes[change["new"]])
+                ipx = [scaler(x) for x in ipx]
+                ipy = [scaler(y) for y in ipy]
+                ienergy = [RdBu11[int(10 * e)] if not math.isnan(e) else "#000000" for e in ienergy]
+                
+                opx, opy, oenergy = zip(*output_nodes[change["new"]])
+                opx = [scaler(x) for x in opx]
+                opy = [scaler(y) for y in opy]
+                oenergy = [RdBu11[int(10 * e)] if not math.osnan(e) else "#000000" for e in oenergy]
+                input_node_data_source.data = {
+                    "px" : ipx,
+                    "py" : ipy,
+                    "fill_color" : ienergy
+                }
+                output_node_data_source.data = {
+                    "px" : opx,
+                    "py" : opy,
+                    "fill_color" : oenergy
                 }
             push_notebook()
             pass

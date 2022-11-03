@@ -52,7 +52,9 @@ def eval_genomes(genomes, config):
                     "nodes" : [{ "bias" : node[2], "energy" : node[5], "x" : node[4][0], "y" : node[4][1] } for node in net3.nodes],
                     "conns" : [{ "in" : conn[0][0], "out" : conn[0][1], "weight" : conn[2], "x" : conn[1][0], "y" : conn[1][1] } for conn in net3.conns],
                     "num_nodes" : len(net3.nodes),
-                    "num_conns" : len(net3.conns)
+                    "num_conns" : len(net3.conns),
+                    "num_inputs" : config.genome_config.solver.num_inputs,
+                    "num_outputs" : config.genome_config.solver.num_outputs
                 })
 
             while not task.finish():
@@ -69,7 +71,9 @@ def eval_genomes(genomes, config):
                         "nodes" : [{ "bias" : node[2], "energy" : node[5], "x" : node[4][0], "y" : node[4][1] } for node in net3.nodes],
                         "conns" : [{ "in" : conn[0][0], "out" : conn[0][1], "weight" : conn[2], "x" : conn[1][0], "y" : conn[1][1] } for conn in net3.conns],
                         "num_nodes" : len(net3.nodes),
-                        "num_conns" : len(net3.conns)
+                        "num_conns" : len(net3.conns),
+                        "num_inputs" : config.genome_config.solver.num_inputs,
+                        "num_outputs" : config.genome_config.solver.num_outputs
                     })
             if break_flag:
                 break
@@ -159,7 +163,11 @@ def run(config, task, out_dir):
             network_states[f"task{i}"] = []
             network_states[f"task{i}"].append({
                 "nodes" : [{ "bias" : node[2], "energy" : node[5], "x" : node[4][0], "y" : node[4][1] } for node in net3.nodes],
-                "conns" : [{ "in" : conn[0][0], "out" : conn[0][1], "weight" : conn[2], "x" : conn[1][0], "y" : conn[1][1] } for conn in net3.conns]
+                "conns" : [{ "in" : conn[0][0], "out" : conn[0][1], "weight" : conn[2], "x" : conn[1][0], "y" : conn[1][1] } for conn in net3.conns],
+                "num_nodes" : len(net3.nodes),
+                "num_conns" : len(net3.conns),
+                "num_inputs" : config.genome_config.solver.num_inputs,
+                "num_outputs" : config.genome_config.solver.num_outputs
             })
             while not task.finish():
                 if len(net3.conns) > 400 or len(net3.nodes) > 400:
@@ -172,7 +180,9 @@ def run(config, task, out_dir):
                     "nodes" : [{ "bias" : node[2], "energy" : node[5], "x" : node[4][0], "y" : node[4][1] } for node in net3.nodes],
                     "conns" : [{ "in" : conn[0][0], "out" : conn[0][1], "weight" : conn[2], "x" : conn[1][0], "y" : conn[1][1] } for conn in net3.conns],
                     "num_nodes" : len(net3.nodes),
-                    "num_conns" : len(net3.conns)
+                    "num_conns" : len(net3.conns),
+                    "num_inputs" : config.genome_config.solver.num_inputs,
+                    "num_outputs" : config.genome_config.solver.num_outputs
                 })
             if break_flag:
                 break
