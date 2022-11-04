@@ -113,7 +113,6 @@ std::map<std::string, std::function<double(double)>> activation_functions = {
     { "cube", activations::cube_activation }
 };
 
-
 RecurrentNetwork::RecurrentNetwork(int num_inputs, int num_outputs, const boost::python::list& nodes, const boost::python::list& conns, const boost::python::list& activation_defs)
     : num_inputs(num_inputs), num_outputs(num_outputs), 
     nodes(boost::python::len(nodes)), conns(boost::python::len(conns)), activations(boost::python::len(activation_defs))
@@ -180,6 +179,23 @@ void RecurrentNetwork::reset() {
         }
     }
     active = 0;
+}
+
+RecurrentNetwork RecurrentNetwork::clone() const noexcept {
+    RecurrentNetwork rnn;
+    rnn.num_inputs = num_inputs;
+    rnn.num_outputs = num_outputs;
+    rnn.active = 0;
+    rnn.nodes = nodes;
+    rnn.conns = conns;
+    rnn.activations = activations;
+    for(auto& values_ : rnn.values) {
+        values_ = std::vector<double>(nodes.size());
+    }
+    for(int i = 0; i < num_outputs; i++) {
+        rnn.m_outputs.append(0);
+    }
+    return rnn;
 }
 
 

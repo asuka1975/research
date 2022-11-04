@@ -38,7 +38,8 @@ def eval_genomes(genomes, config):
             "deleter" : net2,
             "hebb" : genome.hebb,
             "num_neighbors" : config.genome_config.num_neighbors,
-            "num_develop_steps" : config.genome_config.num_develop_steps
+            "num_develop_steps" : config.genome_config.num_develop_steps,
+            "enable_devrule_per_neurocomponents" : config.enable_devrule_per_neurocomponents
         }, type("Hoge", (object, ), {"genome_config": config.genome_config.solver}))
         genome.fitness = 0
         break_flag = False
@@ -149,7 +150,8 @@ def run(config, task, out_dir):
             "deleter" : winner_net2,
             "hebb" : winner.hebb,
             "num_neighbors" : config.genome_config.num_neighbors,
-            "num_develop_steps" : config.genome_config.num_develop_steps
+            "num_develop_steps" : config.genome_config.num_develop_steps,
+            "enable_devrule_per_neurocomponents" : config.enable_devrule_per_neurocomponents
         }, type("Hoge", (object, ), {"genome_config": config.genome_config.solver}))
 
         task_states = {}

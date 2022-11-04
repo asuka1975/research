@@ -91,7 +91,9 @@ public:
     : num_inputs(num_inputs), num_outputs(num_outputs), active(0), step(1), develop_tick(boost::python::extract<int>(devconfig["num_develop_steps"])), num_neighbors(boost::python::extract<int>(devconfig["num_neighbors"])),
         creator(boost::python::extract<RecurrentNetwork&>(creator), boost::python::extract<int>(devconfig["num_neighbors"])),
         deleter(boost::python::extract<RecurrentNetwork&>(deleter)),
-        nodes(boost::python::len(nodes)), conns(boost::python::len(conns)) {
+        nodes(boost::python::len(nodes)), conns(boost::python::len(conns)),
+        devrule_per_neurocomponents(devconfig.has_key("enable_devrule_per_neurocomponents") ? devconfig["enable_devrule_per_neurocomponents"] : false),
+        origin_creator((RecurrentNetwork&)boost::python::extract<RecurrentNetwork&>(creator)), origin_deleter((RecurrentNetwork&)boost::python::extract<RecurrentNetwork&>(deleter)) {
         for(int i = 0; i < boost::python::len(nodes); i++) {
             double x = boost::python::extract<double>(nodes[i][0]);
             double y = boost::python::extract<double>(nodes[i][1]);
@@ -118,6 +120,18 @@ public:
         std::get<2>(hebb) = boost::python::extract<double>(hebb_config[2]);
         std::get<3>(hebb) = boost::python::extract<double>(hebb_config[3]);
         std::get<4>(hebb) = boost::python::extract<double>(hebb_config[4]);
+        if(devrule_per_neurocomponents) {
+            auto& crnn = (RecurrentNetwork&)boost::python::extract<RecurrentNetwork&>(creator);
+            for(int i = 0; i < boost::python::len(nodes); i++) {
+                creator_networks.push_back(crnn.clone());
+                creators.emplace_back(creator_networks.back(), num_neighbors);
+            }
+            auto& drnn = (RecurrentNetwork&)boost::python::extract<RecurrentNetwork&>(deleter);
+            for(int i = 0; i < boost::python::len(conns); i++) {
+                deleter_networks.push_back(drnn.clone());
+                deleters.emplace_back(deleter_networks.back());
+            }
+        }
     }
 
     boost::python::list activate(const boost::python::list& inputs) {
@@ -167,9 +181,17 @@ public:
     void develop() {
         std::vector<std::ptrdiff_t> removes(conns.size());
         std::iota(removes.begin(), removes.end(), 0);
-        auto riter = std::remove_if(removes.begin(), removes.end(), [&deleter=this->deleter, &conns=conns, &nodes=nodes](auto i) {
-            return deleter(nodes[std::get<2>(conns[i])], nodes[std::get<3>(conns[i])], conns[i]);
-        });
+        std::vector<std::ptrdiff_t>::iterator riter;
+        if(devrule_per_neurocomponents) {
+            riter = std::remove_if(removes.begin(), removes.end(), [&deleters=this->deleters, &conns=conns, &nodes=nodes](auto i) {
+                return deleters[i](nodes[std::get<2>(conns[i])], nodes[std::get<3>(conns[i])], conns[i]);
+            });
+        } else {
+            riter = std::remove_if(removes.begin(), removes.end(), [&deleter=this->deleter, &conns=conns, &nodes=nodes](auto i) {
+                return !deleter(nodes[std::get<2>(conns[i])], nodes[std::get<3>(conns[i])], conns[i]);
+            });
+        }
+        
         removes.erase(riter, removes.end());
         std::sort(removes.begin(), removes.end());
 
@@ -193,7 +215,12 @@ public:
                 std::get<1>(conn_avg) = std::get<1>(sum) / len;
                 std::get<2>(conn_avg) = std::get<2>(sum) / len;
             }
-            auto ret = creator(indices.begin(), indices.begin() + num_neighbors, nodes, conn_avg);
+            std::pair<std::tuple<double, double, double, bool>, std::tuple<double, double, double, bool>> ret;
+            if(devrule_per_neurocomponents) {
+                ret = creators[index](indices.begin(), indices.begin() + num_neighbors, nodes, conn_avg);
+            } else {
+                ret = creator(indices.begin(), indices.begin() + num_neighbors, nodes, conn_avg);
+            }
             auto [nx, ny, bias, nf] = ret.first;
             auto [cx, cy, weight, cf] = ret.second;
             double ccx = cx, ccy = cy;
@@ -201,17 +228,29 @@ public:
                 nodes.emplace_back(nx, ny, bias, 0.5);
                 values[0].push_back(0);
                 values[1].push_back(0);
+                if(devrule_per_neurocomponents) {
+                    creator_networks.push_back(origin_creator.get().clone());
+                    creators.emplace_back(creator_networks.back(), num_neighbors);
+                }
             }
             if(cf) {
                 auto iter = std::min_element(nodes.begin(), nodes.end(), [ccx, ccy](auto& a, auto & b) { 
                     return distance2(ccx, ccy, std::get<0>(a), std::get<1>(a)) < distance2(ccx, ccy, std::get<0>(b), std::get<1>(b));
                 });
                 conns.emplace_back(cx, cy, index, iter - nodes.begin(), weight);
+                if(devrule_per_neurocomponents) {
+                    deleter_networks.push_back(origin_deleter.get().clone());
+                    deleters.emplace_back(deleter_networks.back());
+                }
             }
             index++;
         }
-        std::for_each(removes.rbegin(), removes.rend(), [&conns=this->conns](auto i) mutable {
+        std::for_each(removes.rbegin(), removes.rend(), [&conns=this->conns, &deleters=this->deleters, &deleter_networks=this->deleter_networks, pf=devrule_per_neurocomponents](auto i) mutable {
             conns.erase(conns.begin() + i);
+            if(pf) {
+                deleters.erase(deleters.begin() + i);
+                deleter_networks.erase(deleter_networks.begin() + i);
+            }
         });
     }
 
@@ -253,6 +292,13 @@ private:
     std::vector<std::tuple<double, double, double, double>> nodes; // x, y, bias, energy
     std::vector<std::tuple<double, double, int, int, double>> conns; // x, y, in, out, weight
     std::array<std::vector<double>, 2> values;
+    bool devrule_per_neurocomponents;
+    std::vector<RecurrentNetwork> creator_networks;
+    std::vector<RecurrentNetwork> deleter_networks;
+    std::vector<creator_t> creators;
+    std::vector<deleter_t> deleters;
+    std::reference_wrapper<RecurrentNetwork> origin_creator;
+    std::reference_wrapper<RecurrentNetwork> origin_deleter;
 };
 
 BOOST_PYTHON_MODULE(cdevelopmental)

@@ -10,9 +10,11 @@
 
 class RecurrentNetwork {
 public:
+    RecurrentNetwork() = default;
     RecurrentNetwork(int num_inputs, int num_outputs, const boost::python::list& nodes, const boost::python::list& conns, const boost::python::list& activation_defs);
     boost::python::list activate(const boost::python::list& inputs);
     void reset();
+    RecurrentNetwork clone() const noexcept;
 private:
     boost::python::list m_outputs;
     int num_inputs;
