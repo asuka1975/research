@@ -42,7 +42,7 @@ def solve3(a11, a12, a13, a21, a22, a23, a31, a32, a33, b1, b2, b3):
     )
 
 @numba.njit('Tuple((f8, f8, f8, f8, f8, f8, f8, f8, f8))(f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8)')
-def update3(dt, g, cweight, p1weight, p1length, p2weight, p2length, j1, j2, resistance, th1, th1_dot, th1_dot2, th2, th2_dot, th2_dot2, x, x_dot, x_dot2, f):
+def update3_broken(dt, g, cweight, p1weight, p1length, p2weight, p2length, j1, j2, resistance, th1, th1_dot, th1_dot2, th2, th2_dot, th2_dot2, x, x_dot, x_dot2, f):
     x_dot2, th1_dot2, th2_dot2 = solve3(
         cweight + p1weight + p2weight, (p1weight + p2weight) * p1length * cos(th1), p2weight * p2length * cos(th1),
         (p1weight + p2weight) * p1length * cos(th1), p1weight * p1length ** 2 + p2weight * p1length ** 2 + j1, p2weight * p1length * p2length * cos(th1 - th2),
@@ -51,6 +51,32 @@ def update3(dt, g, cweight, p1weight, p1length, p2weight, p2length, j1, j2, resi
         (p1weight + p2weight) * p1length * (th1_dot ** 2) * sin(th1) + p2weight * p2length * (th2_dot ** 2) * sin(th2) + f - resistance * x_dot,
         p1weight * g * p1length * sin(th1) - p2weight * p1length * p2length * (th2_dot ** 2) * sin(th1 - th2) - resistance * th1_dot,
         p2weight * g * p2length * sin(th2) + p2weight * p1length * p2length * (th1_dot ** 2) * sin(th1 - th2) - resistance * th2_dot
+    )
+
+    x_dot += x_dot2 * dt
+    x += x_dot * dt
+    th1_dot += th1_dot2 * dt
+    th1 += th1_dot * dt
+    th2_dot += th2_dot2 * dt
+    th2 += th2_dot * dt
+    while th1 < 0:
+        th1 += 2 * pi
+    th1 = np.fmod(th1, 2 * pi)
+    while th2 < 0:
+        th2 += 2 * pi
+    th2 = np.fmod(th2, 2 * pi)
+
+    return x, x_dot, x_dot2, th1, th1_dot, th1_dot2, th2, th2_dot, th2_dot2
+
+@numba.njit('Tuple((f8, f8, f8, f8, f8, f8, f8, f8, f8))(f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8)')
+def update3_double(dt, g, cweight, p1weight, p1length, p2weight, p2length, j1, j2, resistance, th1, th1_dot, th1_dot2, th2, th2_dot, th2_dot2, x, x_dot, x_dot2, f):
+    x_dot2, th1_dot2, th2_dot2 = solve3(
+        cweight + p1weight + p2weight, p1weight * p1length * cos(th1), p2weight * p2length * cos(th2),
+        p1weight * p1length * cos(th1), p1weight * p1length * p1length + j1, 0,
+        p2weight * p2length * cos(th2), 0, p2weight * p2length * p2length + j2,
+        f - resistance * x_dot + p1weight * p1length * th1_dot * th1_dot * sin(th1) + p2weight * p2length * th2_dot * th2_dot * sin(th2),
+        p1weight * g * p1length * sin(th1) - resistance * th1_dot,
+        p2weight * g * p2length * sin(th2) - resistance * th2_dot
     )
 
     x_dot += x_dot2 * dt
@@ -235,7 +261,7 @@ class BrokenPoleCartPole:
         self.g = config["gravity"]
         self.cart_weight = config["cart_weight"]
         self.resistance = config["resistance"]
-
+        self.xrange = [-inf, inf] if config["range"] is None else config["range"]
         self.pole_weight = config["pole_weight"]
         self.pole_length = config["pole_length"]
         self.j = self.pole_weight * self.pole_length ** 2 # moment of inertia
@@ -274,7 +300,7 @@ class BrokenPoleCartPole:
             self.x, self.x_dot, self.x_dot2, self.theta, self.theta_dot, self.theta_dot2 = update2(self.dt, self.g, self.cart_weight, self.pole_weight, self.pole_length, self.j, self.resistance, self.theta, self.theta_dot, self.theta_dot2, self.x, self.x_dot, self.x_dot2, f)
             self.fitness_value += 1 if cos(self.theta) > 5 / 6 else 0
         else:
-            self.x, self.x_dot, self.x_dot2, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2 = update3(self.dt, self.g, self.cart_weight, self.pole1_weight, self.pole1_length, self.pole2_weight, self.pole2_length, self.j1, self.j2, self.resistance, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2, self.x, self.x_dot, self.x_dot2, f)
+            self.x, self.x_dot, self.x_dot2, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2 = update3_broken(self.dt, self.g, self.cart_weight, self.pole1_weight, self.pole1_length, self.pole2_weight, self.pole2_length, self.j1, self.j2, self.resistance, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2, self.x, self.x_dot, self.x_dot2, f)
             self.fitness_value += (self.pole_rate if cos(self.theta1) > 5 / 6 else 0) + (1 - self.pole_rate if cos(self.theta2) > 5 / 6 else 0)
 
         self.steps += 1
@@ -290,7 +316,7 @@ class BrokenPoleCartPole:
         if self.broken:
             return [self.x, self.x_dot, cos(self.theta1), sin(self.theta1), self.theta1_dot, cos(self.theta2), sin(self.theta2), self.theta2_dot]
         else:
-            return [self.x, self.x_dot, cos(self.theta), sin(self.theta), self.theta_dot, 0, 0]
+            return [self.x, self.x_dot, cos(self.theta), sin(self.theta), self.theta_dot, 0, 0, 0]
 
     def state(self):
         if self.broken:
@@ -321,10 +347,120 @@ class BrokenPoleCartPole:
         }
 
     def finish(self):
-        return self.steps >= self.num_steps or not (-1 < self.x < 1)
+        return self.steps >= self.num_steps or not (self.xrange[0] < self.x < self.xrange[1])
 
     def fitness(self):
-        if not (-1 < self.x < 1):
+        if not (self.xrange[0] < self.x < self.xrange[1]):
+            return self.fitness_value - 100
+        return self.fitness_value
+
+    def max_fitness(self):
+        return self.num_steps
+
+    def min_fitness(self):
+        return -100
+
+    def num_inputs(self):
+        return 8
+
+    def num_outputs(self):
+        return 1
+
+class DoublePoleCartPole:
+    def __init__(self, config):
+        self.dt = config["dt"]
+        self.g = config["gravity"]
+        self.cart_weight = config["cart_weight"]
+        self.resistance = config["resistance"]
+        self.xrange = [-inf, inf] if config["range"] is None else config["range"]
+        self.pole_weight = config["pole1_weight"]
+        self.pole_length = config["pole1_length"]
+        self.j = self.pole_weight * self.pole_length ** 2 # moment of inertia
+        self.theta = random() * (config["initial_theta"][1] - config["initial_theta"][0]) + config["initial_theta"][0]
+        self.theta_dot = 0
+        self.theta_dot2 = 0
+        self.x = 0
+        self.x_dot = 0
+        self.x_dot2 = 0
+
+        # double states
+        self.pole1_weight = config["pole1_weight"]
+        self.pole1_length = config["pole1_length"]
+        self.pole2_weight = config["pole1_weight"]
+        self.pole2_length = config["pole1_length"]
+        self.j1 = self.pole1_weight * self.pole1_length ** 2 # moment of inertia
+        self.j2 = self.pole2_weight * self.pole2_length ** 2
+        self.theta1 = random() * 2 * pi
+        self.theta1_dot = 0
+        self.theta1_dot2 = 0
+        self.theta2 = random() * (config["initial_theta"][1] - config["initial_theta"][0]) + config["initial_theta"][0]
+        self.theta2_dot = 0
+        self.theta2_dot2 = 0
+
+        self.num_steps = config["num_steps"]
+        self.steps = 0
+        self.fitness_value = 0
+
+        self.double = False
+        self.break_step = randint(*config["break_step"])
+
+    def update(self, inputs):
+        f = inputs[0]
+        if not self.double:
+            self.x, self.x_dot, self.x_dot2, self.theta, self.theta_dot, self.theta_dot2 = update2(self.dt, self.g, self.cart_weight, self.pole_weight, self.pole_length, self.j, self.resistance, self.theta, self.theta_dot, self.theta_dot2, self.x, self.x_dot, self.x_dot2, f)
+            self.fitness_value += 1 if cos(self.theta) > 5 / 6 else 0
+        else:
+            self.x, self.x_dot, self.x_dot2, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2 = update3_double(self.dt, self.g, self.cart_weight, self.pole1_weight, self.pole1_length, self.pole2_weight, self.pole2_length, self.j1, self.j2, self.resistance, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2, self.x, self.x_dot, self.x_dot2, f)
+            self.fitness_value += ((self.pole1_length if cos(self.theta1) > 5 / 6 else 0) + (self.pole2_length if cos(self.theta2) > 5 / 6 else 0)) / (self.pole1_length + self.pole2_length)
+
+        self.steps += 1
+
+        if self.break_step == self.steps:
+            self.theta1 = self.theta
+            self.theta1_dot = self.theta_dot
+            self.theta1_dot2 = self.theta_dot2
+            self.theta2 = self.theta
+            self.double = True
+
+    def get_output(self):
+        if self.double:
+            return [self.x, self.x_dot, cos(self.theta1), sin(self.theta1), self.theta1_dot, cos(self.theta2), sin(self.theta2), self.theta2_dot]
+        else:
+            return [self.x, self.x_dot, cos(self.theta), sin(self.theta), self.theta_dot, 0, 0, 0]
+
+    def state(self):
+        if self.double:
+            return {
+                "double" : True,
+                "pole1_length" : self.pole1_length,
+                "pole2_length" : self.pole2_length,
+                "cart_position" : self.x,
+                "pole1_angle" : self.theta1,
+                "pole2_angle" : self.theta2
+            }
+        else:
+            return {
+                "double" : False,
+                "cart_position" : self.x,
+                "pole_angle" : self.theta
+            }
+
+    def label(self):
+        return {
+            -1 : "cart position",
+            -2 : "cart velocity",
+            -3 : "pole1 angle",
+            -4 : "pole1 angular velocity",
+            -5 : "pole2 angle",
+            -6 : "pole2 angular velocity",
+            0 : "force"
+        }
+
+    def finish(self):
+        return self.steps >= self.num_steps or not (self.xrange[0] < self.x < self.xrange[1])
+
+    def fitness(self):
+        if not (self.xrange[0] < self.x < self.xrange[1]):
             return self.fitness_value - 100
         return self.fitness_value
 
