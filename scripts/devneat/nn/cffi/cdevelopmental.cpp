@@ -184,7 +184,7 @@ public:
         std::vector<std::ptrdiff_t>::iterator riter;
         if(devrule_per_neurocomponents) {
             riter = std::remove_if(removes.begin(), removes.end(), [&deleters=this->deleters, &conns=conns, &nodes=nodes](auto i) {
-                return deleters[i](nodes[std::get<2>(conns[i])], nodes[std::get<3>(conns[i])], conns[i]);
+                return !deleters[i](nodes[std::get<2>(conns[i])], nodes[std::get<3>(conns[i])], conns[i]);
             });
         } else {
             riter = std::remove_if(removes.begin(), removes.end(), [&deleter=this->deleter, &conns=conns, &nodes=nodes](auto i) {
