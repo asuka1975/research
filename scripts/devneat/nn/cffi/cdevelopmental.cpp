@@ -237,10 +237,13 @@ public:
                 auto iter = std::min_element(nodes.begin(), nodes.end(), [ccx, ccy](auto& a, auto & b) { 
                     return distance2(ccx, ccy, std::get<0>(a), std::get<1>(a)) < distance2(ccx, ccy, std::get<0>(b), std::get<1>(b));
                 });
-                conns.emplace_back(cx, cy, index, iter - nodes.begin(), weight);
-                if(devrule_per_neurocomponents) {
-                    deleter_networks.push_back(origin_deleter.get().clone());
-                    deleters.emplace_back(deleter_networks.back());
+                int in = index, out = iter - nodes.begin();
+                if(std::find_if(conns.begin(), conns.end(), [in, out] (auto&& x) { return std::get<2>(x) == in && std::get<3>(x) == out; }) == conns.end()) {
+                    conns.emplace_back(cx, cy, index, iter - nodes.begin(), weight);
+                    if(devrule_per_neurocomponents) {
+                        deleter_networks.push_back(origin_deleter.get().clone());
+                        deleters.emplace_back(deleter_networks.back());
+                    }
                 }
             }
             index++;
