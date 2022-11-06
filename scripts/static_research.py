@@ -48,6 +48,8 @@ def eval_genomes(genomes, config):
             with open(f"observe{observe_index}/genome{idx}/other.json", "w") as f:
                 f.write(json.dumps({
                     "fitness" : genome.fitness,
+                    "num_nodes" : len(set(genome.nodes)),
+                    "num_conns" : sum(1 for cg in genome.connections.values() if cg.enabled),
                     "genome_id" : genome_id
                 }))
             with open(f"observe{observe_index}/genome{idx}/cartpole.bson", "wb") as f:
