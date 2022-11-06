@@ -50,6 +50,8 @@ def eval_genomes(genomes, config):
                     "fitness" : genome.fitness,
                     "num_nodes" : len(set(genome.nodes)),
                     "num_conns" : sum(1 for cg in genome.connections.values() if cg.enabled),
+                    "conns" : net.conns,
+                    "nodes" : net.nodes, 
                     "genome_id" : genome_id
                 }))
             with open(f"observe{observe_index}/genome{idx}/cartpole.bson", "wb") as f:

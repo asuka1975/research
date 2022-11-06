@@ -84,6 +84,14 @@ def eval_genomes(genomes, config):
             with open(f"observe{observe_index}/genome{idx}/other.json", "w") as f:
                 f.write(json.dumps({
                     "fitness" : genome.fitness,
+                    "creator" : {
+                        "nodes" : net1.nodes,
+                        "conns" : net1.conns
+                    }, 
+                    "deleter" : {
+                        "nodes" : net2.nodes,
+                        "conns" : net2.conns
+                    },
                     "genome_id" : genome_id
                 }))
             with open(f"observe{observe_index}/genome{idx}/network.bson", "wb") as f:

@@ -198,6 +198,21 @@ RecurrentNetwork RecurrentNetwork::clone() const noexcept {
     return rnn;
 }
 
+boost::python::list RecurrentNetwork::get_conns() {
+    boost::python::list cs;
+    for(auto [i, o, w] : conns) {
+        cs.append(boost::python::make_tuple(boost::python::make_tuple(i, o), w));
+    }
+    return cs;
+}
+
+boost::python::list RecurrentNetwork::get_nodes() {
+    boost::python::list ns;
+    for(auto [bias, fid] : nodes) {
+        ns.append(boost::python::make_tuple(bias, fid));
+    }
+    return ns;
+}
 
 BOOST_PYTHON_MODULE(crecurrent)
 {
@@ -205,5 +220,7 @@ BOOST_PYTHON_MODULE(crecurrent)
     Py_Initialize();
     class_<RecurrentNetwork>("RecurrentNetwork", init<int, int, boost::python::list, boost::python::list, boost::python::list>())
         .def("activate", &RecurrentNetwork::activate)
-        .def("reset", &RecurrentNetwork::reset);
+        .def("reset", &RecurrentNetwork::reset)
+        .add_property("conns", &RecurrentNetwork::get_conns)
+        .add_property("nodes", &RecurrentNetwork::get_nodes);
 }

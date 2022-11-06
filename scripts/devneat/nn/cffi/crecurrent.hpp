@@ -15,6 +15,8 @@ public:
     boost::python::list activate(const boost::python::list& inputs);
     void reset();
     RecurrentNetwork clone() const noexcept;
+    boost::python::list get_conns();
+    boost::python::list get_nodes();
 private:
     boost::python::list m_outputs;
     int num_inputs;

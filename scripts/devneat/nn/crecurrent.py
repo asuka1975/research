@@ -12,6 +12,14 @@ class RecurrentNetwork(object):
     def activate(self, inputs):
         return self.network.activate(inputs)
 
+    @property
+    def conns(self):
+        return self.network.conns
+
+    @property
+    def nodes(self):
+        return self.network.nodes
+
     @staticmethod
     def create(genome, config):
         """ Receives a genome and returns its phenotype (a RecurrentNetwork). """
