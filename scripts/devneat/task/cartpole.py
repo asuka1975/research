@@ -740,7 +740,8 @@ class CartPoleInputSwitching:
     def state(self):
         return {
             "cart_position" : self.x,
-            "pole_angle" : self.theta
+            "pole_angle" : self.theta,
+            "switching" : self.steps >= self.switch_step
         }
 
     def label(self):
