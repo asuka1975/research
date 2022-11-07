@@ -7,6 +7,9 @@ import sys
 
 import bson
 
+import zlib
+import numpy as np
+
 import neat
 import visualize
 from devneat.genome import CustomGenome
@@ -43,6 +46,8 @@ def eval_genomes(genomes, config):
         }, type("Hoge", (object, ), {"genome_config": config.genome_config.solver}))
         genome.fitness = 0
         break_flag = False
+        if config.enable_evaluation_by_complexity:
+            fs = []
         for i in task_config["schedule"]:
             task = create_task(task_config["tasks"][i])
             if observing:
@@ -65,6 +70,9 @@ def eval_genomes(genomes, config):
                     break
                 inputs = net3.activate(task.get_output())
                 task.update(inputs)
+                
+                if config.enable_evaluation_by_complexity:
+                    fs.extend(inputs)
 
                 if observing:
                     task_states[f"task{i}"].append(task.state())
@@ -78,7 +86,17 @@ def eval_genomes(genomes, config):
                     })
             if break_flag:
                 break
-            genome.fitness += task.fitness()
+            
+            if config.enable_evaluation_by_complexity:
+                b = np.array(fs).tobytes()
+                rate = len(zlib.compress(b)) / len(b)
+                f = task.fitness()
+                if f < 0:
+                    genome.fitness += f
+                else:
+                    genome.fitness += f * rate
+            else:
+                genome.fitness += task.fitness()
         
         if observing:
             with open(f"observe{observe_index}/genome{idx}/other.json", "w") as f:
