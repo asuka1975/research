@@ -702,3 +702,72 @@ class DoublePoleCartPoleGeometricMean:
 
     def num_outputs(self):
         return 1
+
+class CartPoleInputSwitching:
+    def __init__(self, config) -> None:
+        self.dt = config["dt"]
+        self.g = config["gravity"]
+        self.xrange = [-inf, inf] if config["range"] is None else config["range"]
+        self.cart_weight = config["cart_weight"]
+        self.pole_weight = config["pole_weight"]
+        self.pole_length = config["pole_length"]
+        self.j = self.pole_weight * self.pole_length ** 2 # moment of inertia
+        self.resistance = config["resistance"]
+        self.theta = random() * (config["initial_theta"][1] - config["initial_theta"][0]) + config["initial_theta"][0]
+        self.theta_dot = 0
+        self.theta_dot2 = 0
+        self.x = 0
+        self.x_dot = 0
+        self.x_dot2 = 0
+        self.num_steps = config["num_steps"]
+        self.switch_step = randint(*config["switch_step"])
+        self.steps = 0
+        self.fitness_value = 0
+
+    def update(self, inputs):
+        f = inputs[0]
+        self.x, self.x_dot, self.x_dot2, self.theta, self.theta_dot, self.theta_dot2 = update2(self.dt, self.g, self.cart_weight, self.pole_weight, self.pole_length, self.j, self.resistance, self.theta, self.theta_dot, self.theta_dot2, self.x, self.x_dot, self.x_dot2, f)
+
+        self.fitness_value += 1 if cos(self.theta) > 5 / 6 else 0
+        self.steps += 1
+
+    def get_output(self):
+        if self.steps < self.switch_step:
+            return [self.x, self.x_dot, cos(self.theta), sin(self.theta), self.theta_dot, 0]
+        else:
+            return [self.x, self.x_dot, 0, sin(self.theta), self.theta_dot, cos(self.theta)]
+
+    def state(self):
+        return {
+            "cart_position" : self.x,
+            "pole_angle" : self.theta
+        }
+
+    def label(self):
+        return {
+            -1 : "cart position",
+            -2 : "cart velocity",
+            -3 : "pole angle",
+            -4 : "pole angular velocity",
+            0 : "force"
+        }
+
+    def finish(self):
+        return self.steps >= self.num_steps or not (self.xrange[0] < self.x < self.xrange[1])
+
+    def fitness(self):
+        if not (self.xrange[0] < self.x < self.xrange[1]):
+            return -100
+        return self.fitness_value
+
+    def max_fitness(self):
+        return self.num_steps
+
+    def min_fitness(self):
+        return -100
+
+    def num_inputs(self):
+        return 6
+
+    def num_outputs(self):
+        return 1
