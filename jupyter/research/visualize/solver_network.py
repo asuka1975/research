@@ -370,10 +370,24 @@ class SolverNetworkView:
         else:
             px0, py0, energy0 = [], [], []
         sgn = lambda v: -1 if v < 0 else 1
-        scaler = lambda x: x if -1 <= x <= 1 else sgn(x) * math.log10(abs(x))
 
-        px0 = [scaler(x) for x in px0]
-        py0 = [scaler(y) for y in py0]
+
+        xscaled = max([x for step in nodes for x, y, e in step]) > 100
+        yscaled = max([y for step in nodes for x, y, e in step]) > 100
+        if xscaled: print("x scaled")
+        if yscaled: print("y scaled")
+
+        if xscaled:
+            xscaler = lambda x: x if -1 <= x <= 1 else sgn(x) * math.log10(abs(x))
+        else:
+            xscaler = lambda x: x
+        if yscaled:
+            yscaler = lambda y: y if -1 <= y <= 1 else sgn(y) * math.log10(abs(y))
+        else:
+            yscaler = lambda y: y
+
+        px0 = [xscaler(x) for x in px0]
+        py0 = [yscaler(y) for y in py0]
         energy0 = [RdBu11[int(10 * e)] if not math.isnan(e) else "#000000" for e in energy0]
 
         self = figure(title="solver network", plot_width=500, plot_height=500, output_backend="webgl")
@@ -389,13 +403,13 @@ class SolverNetworkView:
             output_nodes = [[(node["x"], node["y"], node["energy"]) for node in n["nodes"]][num_inputs:(num_inputs+num_outputs)] for task in solver.values() for n in task]
 
             ipx0, ipy0, ienergy0 = zip(*input_nodes[0])
-            ipx0 = [scaler(x) for x in ipx0]
-            ipy0 = [scaler(y) for y in ipy0]
+            ipx0 = [xscaler(x) for x in ipx0]
+            ipy0 = [yscaler(y) for y in ipy0]
             ienergy0 = [RdBu11[int(10 * e)] if not math.isnan(e) else "#000000" for e in ienergy0]
             
             opx0, opy0, oenergy0 = zip(*output_nodes[0])
-            opx0 = [scaler(x) for x in opx0]
-            opy0 = [scaler(y) for y in opy0]
+            opx0 = [xscaler(x) for x in opx0]
+            opy0 = [yscaler(y) for y in opy0]
             oenergy0 = [RdBu11[int(10 * e)] if not math.isnan(e) else "#000000" for e in oenergy0]
 
             input_node_data_source = ColumnDataSource(data=dict(px=list(ipx0), py=list(ipy0), fill_color=ienergy0))
@@ -407,7 +421,7 @@ class SolverNetworkView:
             self.add_glyph(output_node_data_source, output_node)
 
 
-        conns = [[([scaler(n["nodes"][conn["in"]]["x"]), scaler(n["nodes"][conn["out"]]["x"])], [scaler(n["nodes"][conn["in"]]["y"]), scaler(n["nodes"][conn["out"]]["y"])], conn["weight"]) for conn in n["conns"]] for task in solver.values() for n in task]
+        conns = [[([xscaler(n["nodes"][conn["in"]]["x"]), xscaler(n["nodes"][conn["out"]]["x"])], [yscaler(n["nodes"][conn["in"]]["y"]), yscaler(n["nodes"][conn["out"]]["y"])], conn["weight"]) for conn in n["conns"]] for task in solver.values() for n in task]
         cx0, cy0, ws0 = zip(*conns[0])
         nh = NormalHead(size=12, fill_color="color", line_color="color", fill_alpha=0.5, line_alpha=0.5)
         conn_data_source = ColumnDataSource(data={
@@ -428,8 +442,8 @@ class SolverNetworkView:
                 px, py, energy = zip(*nodes[change["new"]])
             else:
                 px, py, energy = [], [], []
-            px = [scaler(x) for x in px]
-            py = [scaler(y) for y in py]
+            px = [xscaler(x) for x in px]
+            py = [yscaler(y) for y in py]
             energy = [RdBu11[int(10 * e)] if not math.isnan(e) else "#000000" for e in energy]
             node_data_source.data = {
                 "px" : px,
@@ -457,13 +471,13 @@ class SolverNetworkView:
                 }
             if has_num_neurocomponents:
                 ipx, ipy, ienergy = zip(*input_nodes[change["new"]])
-                ipx = [scaler(x) for x in ipx]
-                ipy = [scaler(y) for y in ipy]
+                ipx = [xscaler(x) for x in ipx]
+                ipy = [yscaler(y) for y in ipy]
                 ienergy = [RdBu11[int(10 * e)] if not math.isnan(e) else "#000000" for e in ienergy]
                 
                 opx, opy, oenergy = zip(*output_nodes[change["new"]])
-                opx = [scaler(x) for x in opx]
-                opy = [scaler(y) for y in opy]
+                opx = [xscaler(x) for x in opx]
+                opy = [yscaler(y) for y in opy]
                 oenergy = [RdBu11[int(10 * e)] if not math.isnan(e) else "#000000" for e in oenergy]
                 input_node_data_source.data = {
                     "px" : ipx,
