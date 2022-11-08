@@ -109,7 +109,8 @@ class CustomStaticConfig(object):
                 ConfigParameter('reset_on_extinction', bool),
                 ConfigParameter('no_fitness_termination', bool, False), 
                 ConfigParameter('observe_tick', int),
-                ConfigParameter('num_generations', int)]
+                ConfigParameter('num_generations', int),
+                ConfigParameter('enable_evaluation_by_complexity', bool, False)]
 
     def __init__(self, genome_type, reproduction_type, species_set_type, stagnation_type, task_config, filename, config_information=None):
         # Check that the provided types have the required methods.
