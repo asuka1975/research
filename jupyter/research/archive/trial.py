@@ -55,6 +55,15 @@ class Trial:
                 f"genome{j}" : get_fitness(i, j) for j in range(len(glob.glob(f"analysis/{self.root}/{self.directory}observe{i}/genome*")))
             } for i in range(len(glob.glob(f"analysis/{self.root}/{self.directory}observe*")))
         })
+    
+    def best(self):
+        df = self.table()
+        idx = df.idxmax()
+        kv = [kv for kv in idx.items()]
+        values = [df[k][v] for k, v in idx.items()]
+        k, v = kv[values.index(max(values))]
+
+        return int(k.replace("observe", "")), int(v.replace("genome", ""))
 
 def clean():
     shutil.rmtree(f"analysis/*")

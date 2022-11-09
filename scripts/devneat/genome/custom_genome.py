@@ -22,6 +22,7 @@ class CustomGenomeConfig:
                         ConfigParameter('hebb_mutate_rate', float),
                         ConfigParameter('hebb_distance_rate', float),
                         ConfigParameter('num_neighbors', int),
+                        ConfigParameter('enable_devrule_per_neurocomponents', bool, False),
                         ConfigParameter('num_develop_steps', int)]
         for p in self._params:
             setattr(self, p.name, p.interpret(params["CustomGenome"]))
