@@ -4,6 +4,7 @@
 #include <functional>
 
 #include "crecurrent.hpp"
+#include <memory>
 
 namespace {
     double tanh_activation(double z) {
@@ -87,6 +88,28 @@ namespace {
 
 class DevelopmentalNetwork {
 public:
+    DevelopmentalNetwork(const DevelopmentalNetwork& obj)
+    : num_inputs(obj.num_inputs), num_outputs(obj.num_outputs), active(0), step(1), develop_tick(obj.develop_tick), num_neighbors(obj.num_neighbors), hebb(obj.hebb),
+        creator(obj.creator), deleter(obj.deleter), nodes(obj.nodes), conns(obj.conns), values(obj.values), devrule_per_neurocomponents(obj.devrule_per_neurocomponents),
+        origin_creator(obj.origin_creator), origin_deleter(obj.origin_deleter) {
+        for(int i = 0; i < 2; i++) {
+            values[i] = obj.values[i];
+        }
+        for(int i = 0; i < num_outputs; i++) {
+            m_outputs.append(0);
+        }
+
+        if(devrule_per_neurocomponents) {
+            for(int i = 0; i < static_cast<int>(nodes.size()); i++) {
+                creator_networks.push_back(std::make_unique<RecurrentNetwork>(origin_creator.clone()));
+                creators.emplace_back(*creator_networks.back(), num_neighbors);
+            }
+            for(int i = 0; i < static_cast<int>(conns.size()); i++) {
+                deleter_networks.push_back(std::make_unique<RecurrentNetwork>(origin_deleter.clone()));
+                deleters.emplace_back(*deleter_networks.back());
+            }
+        }
+    }
     DevelopmentalNetwork(int num_inputs, int num_outputs, const boost::python::list& conns, const boost::python::list& nodes, const boost::python::dict& devconfig, boost::python::object& creator, boost::python::object& deleter)
     : num_inputs(num_inputs), num_outputs(num_outputs), active(0), step(1), develop_tick(boost::python::extract<int>(devconfig["num_develop_steps"])), num_neighbors(boost::python::extract<int>(devconfig["num_neighbors"])),
         creator(boost::python::extract<RecurrentNetwork&>(creator), boost::python::extract<int>(devconfig["num_neighbors"])),
@@ -123,13 +146,13 @@ public:
         if(devrule_per_neurocomponents) {
             auto& crnn = (RecurrentNetwork&)boost::python::extract<RecurrentNetwork&>(creator);
             for(int i = 0; i < boost::python::len(nodes); i++) {
-                creator_networks.push_back(crnn.clone());
-                creators.emplace_back(creator_networks.back(), num_neighbors);
+                creator_networks.push_back(std::make_unique<RecurrentNetwork>(crnn.clone()));
+                creators.emplace_back(*creator_networks.back(), num_neighbors);
             }
             auto& drnn = (RecurrentNetwork&)boost::python::extract<RecurrentNetwork&>(deleter);
             for(int i = 0; i < boost::python::len(conns); i++) {
-                deleter_networks.push_back(drnn.clone());
-                deleters.emplace_back(deleter_networks.back());
+                deleter_networks.push_back(std::make_unique<RecurrentNetwork>(drnn.clone()));
+                deleters.emplace_back(*deleter_networks.back());
             }
         }
     }
@@ -229,8 +252,8 @@ public:
                 values[0].push_back(0);
                 values[1].push_back(0);
                 if(devrule_per_neurocomponents) {
-                    creator_networks.push_back(origin_creator.get().clone());
-                    creators.emplace_back(creator_networks.back(), num_neighbors);
+                    creator_networks.push_back(std::make_unique<RecurrentNetwork>(origin_creator.clone()));
+                    creators.emplace_back(*creator_networks.back(), num_neighbors);
                 }
             }
             if(cf) {
@@ -241,8 +264,8 @@ public:
                 if(std::find_if(conns.begin(), conns.end(), [in, out] (auto&& x) { return std::get<2>(x) == in && std::get<3>(x) == out; }) == conns.end()) {
                     conns.emplace_back(cx, cy, index, iter - nodes.begin(), weight);
                     if(devrule_per_neurocomponents) {
-                        deleter_networks.push_back(origin_deleter.get().clone());
-                        deleters.emplace_back(deleter_networks.back());
+                        deleter_networks.push_back(std::make_unique<RecurrentNetwork>(origin_deleter.clone()));
+                        deleters.emplace_back(*deleter_networks.back());
                     }
                 }
             }
@@ -296,12 +319,12 @@ private:
     std::vector<std::tuple<double, double, int, int, double>> conns; // x, y, in, out, weight
     std::array<std::vector<double>, 2> values;
     bool devrule_per_neurocomponents;
-    std::vector<RecurrentNetwork> creator_networks;
-    std::vector<RecurrentNetwork> deleter_networks;
+    std::vector<std::unique_ptr<RecurrentNetwork>> creator_networks;
+    std::vector<std::unique_ptr<RecurrentNetwork>> deleter_networks;
     std::vector<creator_t> creators;
     std::vector<deleter_t> deleters;
-    std::reference_wrapper<RecurrentNetwork> origin_creator;
-    std::reference_wrapper<RecurrentNetwork> origin_deleter;
+    RecurrentNetwork origin_creator;
+    RecurrentNetwork origin_deleter;
 };
 
 BOOST_PYTHON_MODULE(cdevelopmental)
