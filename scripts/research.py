@@ -42,7 +42,7 @@ def eval_genomes(genomes, config):
             "hebb" : genome.hebb,
             "num_neighbors" : config.genome_config.num_neighbors,
             "num_develop_steps" : config.genome_config.num_develop_steps,
-            "enable_devrule_per_neurocomponents" : config.enable_devrule_per_neurocomponents
+            "enable_devrule_per_neurocomponents" : config.genome_config.enable_devrule_per_neurocomponents
         }, type("Hoge", (object, ), {"genome_config": config.genome_config.solver}))
         genome.fitness = 0
         break_flag = False
