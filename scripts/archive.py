@@ -4,6 +4,7 @@ import datetime
 import subprocess
 import glob
 import shutil
+import subprocess
 
 from devneat.task import create_task
 
@@ -16,6 +17,13 @@ def do_command(command):
 
 data_dir = "data/"
 experiments = ["data/" + e + "/" for e in os.listdir(data_dir)]
+
+l2 = subprocess.run(["sh", "-c", "find data/ | grep -v /observe | grep -v /neat | grep -e '[0123456789]$'"], capture_output=True, text=True).stdout
+l1 = subprocess.run(["sh", "-c", "find data/ | grep fitness.json | sed -e 's/\\/fitness.json//g'"], capture_output=True, text=True).stdout
+
+for v in l2:
+    if v not in l1:
+        shutil.rmtree(v)
 
 fm = {}
 for experiment in experiments:
