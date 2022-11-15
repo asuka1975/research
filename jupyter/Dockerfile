@@ -19,7 +19,7 @@ RUN chown -R $USERNAME:$GROUPNAME /opt/app
 USER $USERNAME
 
 RUN pip install -U pip
-RUN pip install numpy pandas notebook ipywidgets 'bokeh<3' bson selenium networkx scipy glfw PyOpenGL
+RUN pip install numpy pandas notebook ipywidgets 'bokeh<3' bson selenium networkx scipy glfw PyOpenGL sklearn
 
 RUN mkdir /opt/app/analysis
 
