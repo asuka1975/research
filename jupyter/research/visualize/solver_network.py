@@ -355,7 +355,7 @@ class SolverNetwork:
         return self
 
 class SolverNetworkView:
-    def __new__(cls, observe: Observe):
+    def __new__(cls, observe: Observe, xrange=None, yrange=None):
         solver = observe.solver()
         
         has_num_neurocomponents = "num_inputs" in solver["task0"][0]
@@ -391,6 +391,10 @@ class SolverNetworkView:
         energy0 = [RdBu11[int(10 * e)] if not math.isnan(e) else "#000000" for e in energy0]
 
         self = figure(title="solver network", plot_width=500, plot_height=500, output_backend="webgl")
+        if xrange is not None:
+            self.x_range=Range1d(*xrange)
+        if yrange is not None:
+            self.y_range=Range1d(*yrange)
         node_data_source = ColumnDataSource(data=dict(px=list(px0), py=list(py0), fill_color=energy0))
         node = Circle(
             x="px", y="py", size=12,
