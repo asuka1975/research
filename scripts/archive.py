@@ -18,8 +18,8 @@ def do_command(command):
 data_dir = "data/"
 experiments = ["data/" + e + "/" for e in os.listdir(data_dir)]
 
-l2 = subprocess.run(["sh", "-c", "find data/ | grep -v /observe | grep -v /neat | grep -e '[0123456789]$'"], capture_output=True, text=True).stdout
-l1 = subprocess.run(["sh", "-c", "find data/ | grep fitness.json | sed -e 's/\\/fitness.json//g'"], capture_output=True, text=True).stdout
+l2 = subprocess.run(["sh", "-c", "find data/ | grep -v /observe | grep -v /neat | grep -e '[0123456789]$'"], capture_output=True, text=True).stdout.split()
+l1 = subprocess.run(["sh", "-c", "find data/ | grep fitness.json | sed -e 's/\\/fitness.json//g'"], capture_output=True, text=True).stdout.split()
 
 for v in l2:
     if v not in l1:
@@ -51,7 +51,7 @@ for experiment in experiments:
     fm[experiment.split("/")[1]] = { 
         "trials" : len(os.listdir(experiment)), 
         "fitness_max" : f[i[0]], 
-        "real_fitness_max" : f[k[0]],
+        "real_fitness_max" : real_f[k[0]],
         "sorted" : { "fitness" : [trials_int[j] for j in i], "real_fitness" : [trials_int[j] for j in k] } 
     }
 
