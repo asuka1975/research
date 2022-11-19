@@ -930,7 +930,7 @@ class DoublePoleCartPoleRealFitness:
             self.fitness_value += cos(self.theta) * 0.5 + 0.5
         else:
             self.x, self.x_dot, self.x_dot2, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2 = update3_double(self.dt, self.g, self.cart_weight, self.pole1_weight, self.pole1_length, self.pole2_weight, self.pole2_length, self.j1, self.j2, self.resistance, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2, self.x, self.x_dot, self.x_dot2, f)
-            self.fitness_value += ((self.pole1_length * (cos(self.theta1) * 0.5 + 0.5)) + (self.pole2_length * cos(self.theta2) * 0.5 + 0.5)) / (self.pole1_length + self.pole2_length)
+            self.fitness_value += ((self.pole1_length * (cos(self.theta1) * 0.5 + 0.5)) + (self.pole2_length * (cos(self.theta2) * 0.5 + 0.5))) / (self.pole1_length + self.pole2_length)
 
         self.steps += 1
 
