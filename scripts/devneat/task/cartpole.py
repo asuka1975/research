@@ -1016,8 +1016,8 @@ class StochasticCartPoleRealFitness:
         # changed states
         self.pole1_weight = config["pole1_weight"]
         self.pole1_length = config["pole1_length"]
-        self.pole2_weight = config["pole1_weight"]
-        self.pole2_length = config["pole1_length"]
+        self.pole2_weight = config["pole2_weight"]
+        self.pole2_length = config["pole2_length"]
         self.j1 = self.pole1_weight * self.pole1_length ** 2 # moment of inertia
         self.j2 = self.pole2_weight * self.pole2_length ** 2
         self.theta1 = random() * 2 * pi
