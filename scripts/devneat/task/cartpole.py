@@ -1,5 +1,5 @@
 from math import cos, sin, pi, fmod, inf, sqrt
-from random import random, randint
+from random import random, randint, choice
 
 import numpy as np
 from numpy.linalg import solve
@@ -386,8 +386,8 @@ class DoublePoleCartPole:
         # double states
         self.pole1_weight = config["pole1_weight"]
         self.pole1_length = config["pole1_length"]
-        self.pole2_weight = config["pole1_weight"]
-        self.pole2_length = config["pole1_length"]
+        self.pole2_weight = config["pole2_weight"]
+        self.pole2_length = config["pole2_length"]
         self.j1 = self.pole1_weight * self.pole1_length ** 2 # moment of inertia
         self.j2 = self.pole2_weight * self.pole2_length ** 2
         self.theta1 = random() * 2 * pi
@@ -611,8 +611,8 @@ class DoublePoleCartPoleGeometricMean:
         # double states
         self.pole1_weight = config["pole1_weight"]
         self.pole1_length = config["pole1_length"]
-        self.pole2_weight = config["pole1_weight"]
-        self.pole2_length = config["pole1_length"]
+        self.pole2_weight = config["pole2_weight"]
+        self.pole2_length = config["pole2_length"]
         self.j1 = self.pole1_weight * self.pole1_length ** 2 # moment of inertia
         self.j2 = self.pole2_weight * self.pole2_length ** 2
         self.theta1 = random() * 2 * pi
@@ -905,8 +905,8 @@ class DoublePoleCartPoleRealFitness:
         # double states
         self.pole1_weight = config["pole1_weight"]
         self.pole1_length = config["pole1_length"]
-        self.pole2_weight = config["pole1_weight"]
-        self.pole2_length = config["pole1_length"]
+        self.pole2_weight = config["pole2_weight"]
+        self.pole2_length = config["pole2_length"]
         self.j1 = self.pole1_weight * self.pole1_length ** 2 # moment of inertia
         self.j2 = self.pole2_weight * self.pole2_length ** 2
         self.theta1 = random() * 2 * pi
@@ -960,6 +960,148 @@ class DoublePoleCartPoleRealFitness:
         else:
             return {
                 "double" : False,
+                "cart_position" : self.x,
+                "pole_angle" : self.theta
+            }
+
+    def label(self):
+        return {
+            -1 : "cart position",
+            -2 : "cart velocity",
+            -3 : "pole1 angle",
+            -4 : "pole1 angular velocity",
+            -5 : "pole2 angle",
+            -6 : "pole2 angular velocity",
+            0 : "force"
+        }
+
+    def finish(self):
+        return self.steps >= self.num_steps or not (self.xrange[0] < self.x < self.xrange[1])
+
+    def fitness(self):
+        if not (self.xrange[0] < self.x < self.xrange[1]):
+            return self.fitness_value - 100
+        return self.fitness_value
+
+    def max_fitness(self):
+        return self.num_steps
+
+    def min_fitness(self):
+        return -100
+
+    def num_inputs(self):
+        return 8
+
+    def num_outputs(self):
+        return 1
+
+
+class StochasticCartPoleRealFitness:
+    def __init__(self, config):
+        self.dt = config["dt"]
+        self.g = config["gravity"]
+        self.cart_weight = config["cart_weight"]
+        self.resistance = config["resistance"]
+        self.xrange = [-inf, inf] if config["range"] is None else config["range"]
+        self.pole_weight = config["pole1_weight"]
+        self.pole_length = config["pole1_length"]
+        self.j = self.pole_weight * self.pole_length ** 2 # moment of inertia
+        self.theta = random() * (config["initial_theta"][1] - config["initial_theta"][0]) + config["initial_theta"][0]
+        self.theta_dot = 0
+        self.theta_dot2 = 0
+        self.x = 0
+        self.x_dot = 0
+        self.x_dot2 = 0
+
+        # changed states
+        self.pole1_weight = config["pole1_weight"]
+        self.pole1_length = config["pole1_length"]
+        self.pole2_weight = config["pole1_weight"]
+        self.pole2_length = config["pole1_length"]
+        self.j1 = self.pole1_weight * self.pole1_length ** 2 # moment of inertia
+        self.j2 = self.pole2_weight * self.pole2_length ** 2
+        self.theta1 = random() * 2 * pi
+        self.theta1_dot = 0
+        self.theta1_dot2 = 0
+        self.theta2 = random() * (config["initial_theta"][1] - config["initial_theta"][0]) + config["initial_theta"][0]
+        self.theta2_dot = 0
+        self.theta2_dot2 = 0
+
+        self.num_steps = config["num_steps"]
+        self.steps = 0
+        self.fitness_value = 0
+
+        self.pole_state = "single"
+        self.pole_states = config["pole_states"]
+        self.change_prob = float(config["change_prob"])
+        self.config = config
+
+    def update(self, inputs):
+        f = inputs[0]
+        if self.pole_state == "single":
+            self.x, self.x_dot, self.x_dot2, self.theta, self.theta_dot, self.theta_dot2 = update2(self.dt, self.g, self.cart_weight, self.pole_weight, self.pole_length, self.j, self.resistance, self.theta, self.theta_dot, self.theta_dot2, self.x, self.x_dot, self.x_dot2, f)
+            self.fitness_value += cos(self.theta) * 0.5 + 0.5
+        elif self.pole_state == "double":
+            self.x, self.x_dot, self.x_dot2, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2 = update3_double(self.dt, self.g, self.cart_weight, self.pole1_weight, self.pole1_length, self.pole2_weight, self.pole2_length, self.j1, self.j2, self.resistance, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2, self.x, self.x_dot, self.x_dot2, f)
+            self.fitness_value += ((self.pole1_length * (cos(self.theta1) * 0.5 + 0.5)) + (self.pole2_length * (cos(self.theta2) * 0.5 + 0.5))) / (self.pole1_length + self.pole2_length)
+        elif self.pole_state == "broken":
+            self.x, self.x_dot, self.x_dot2, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2 = update3_broken(self.dt, self.g, self.cart_weight, self.pole1_weight, self.pole1_length, self.pole2_weight, self.pole2_length, self.j1, self.j2, self.resistance, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2, self.x, self.x_dot, self.x_dot2, f)
+            self.fitness_value += (self.pole_rate * (cos(self.theta1) * 0.5 + 0.5)) + ((1 - self.pole_rate) * (cos(self.theta2) * 0.5 + 0.5))
+            
+        self.steps += 1
+
+        # change state
+        if random() < self.change_prob:
+            if self.pole_state == "single":
+                self.pole_state = choice(self.pole_states)
+                self.theta1 = self.theta
+                self.theta1_dot = self.theta_dot
+                self.theta1_dot2 = self.theta_dot2
+                self.theta2_dot = 0
+                self.theta2_dot2 = 0
+                if self.pole_state == "double":
+                    self.theta2 = random() * (self.config["initial_theta"][1] - self.config["initial_theta"][0]) + self.config["initial_theta"][0]
+                    self.pole1_length = self.pole_length
+                    self.pole1_weight = self.pole_weight
+                    self.pole2_length = self.config["pole2_length"]
+                    self.pole2_weight = self.config["pole2_weight"]
+                elif self.pole_state == "broken":
+                    self.theta2 = self.theta1
+                    self.pole_rate = random() * 0.4 + 0.3
+                    self.pole1_length = self.pole_rate * self.pole_length
+                    self.pole1_weight = self.pole_rate * self.pole_weight
+                    self.pole2_length = (1 - self.pole_rate) * self.pole_length
+                    self.pole2_weight = (1 - self.pole_rate) * self.pole_weight
+                else:
+                    self.pole_state = "single"
+                
+                self.j1 = self.pole1_weight * self.pole1_length ** 2 # moment of inertia
+                self.j2 = self.pole2_weight * self.pole2_length ** 2
+            else:
+                self.theta = self.theta1
+                self.theta_dot = self.theta1_dot
+                self.theta_dot2 = self.theta1_dot2
+                self.pole_state = "single"
+
+    def get_output(self):
+        if self.pole_state != "single":
+            return [self.x, self.x_dot, cos(self.theta1), sin(self.theta1), self.theta1_dot, cos(self.theta2), sin(self.theta2), self.theta2_dot]
+        else:
+            return [self.x, self.x_dot, cos(self.theta), sin(self.theta), self.theta_dot, 0, 0, 0]
+
+    def state(self):
+        if self.pole_state != "single":
+            return {
+                "state" : self.pole_state,
+                "pole1_length" : self.pole1_length,
+                "pole2_length" : self.pole2_length,
+                "cart_position" : self.x,
+                "pole1_angle" : self.theta1,
+                "pole2_angle" : self.theta2
+            }
+        else:
+            return {
+                "state" : "single",
                 "cart_position" : self.x,
                 "pole_angle" : self.theta
             }
