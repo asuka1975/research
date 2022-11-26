@@ -18,7 +18,7 @@ def do_command(command):
 data_dir = "data/"
 experiments = ["data/" + e + "/" for e in os.listdir(data_dir)]
 
-l2 = subprocess.run(["sh", "-c", "find data/ | grep -v /observe | grep -v /neat | grep -e '[0123456789]$'"], capture_output=True, text=True).stdout.split()
+l2 = subprocess.run(["sh", "-c", "find data/ | grep -v /observe | grep -v /neat | grep -e '/[0123456789]$'"], capture_output=True, text=True).stdout.split()
 l1 = subprocess.run(["sh", "-c", "find data/ | grep fitness.json | sed -e 's/\\/fitness.json//g'"], capture_output=True, text=True).stdout.split()
 
 for v in l2:
