@@ -8,7 +8,7 @@ ARG GID=1000
 ARG USERNAME=shikina
 ARG GROUPNAME=shikina
 
-RUN apt update && apt upgrade -y && apt install pixz firefox-geckodriver python3-opengl python3-pip -y
+RUN apt update && apt upgrade -y && apt install pixz firefox-geckodriver python3-pip -y
 
 RUN groupadd -g $GID $GROUPNAME && \
     useradd -m -s /bin/bash -u $UID -g $GID $USERNAME
@@ -19,7 +19,7 @@ RUN chown -R $USERNAME:$GROUPNAME /opt/app
 USER $USERNAME
 
 RUN pip install -U pip
-RUN pip install numpy pandas notebook ipywidgets 'bokeh<3' bson selenium networkx scipy glfw PyOpenGL sklearn
+RUN pip install numpy pandas notebook ipywidgets 'bokeh<3' bson selenium networkx scipy sklearn
 
 RUN mkdir /opt/app/analysis
 
