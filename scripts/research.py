@@ -23,10 +23,16 @@ from devneat.task import create_task
 def scale(v, mn, mx):
     return (v - mn) / (mx - mn)
 
+def calc_complexity(d):
+    div = np.abs(d[1:] - d[:-1])
+    return np.var(div)
+
 def eval_genomes(genomes, config):
     task_config = config.task_config
     observing = config.generation_step % config.observe_tick == 0
     observe_index = config.generation_step // config.observe_tick
+    conn_complexities = [0] * len(genomes)
+    node_complexities = [0] * len(genomes)
     for idx, (genome_id, genome) in enumerate(genomes):
         if observing:
             os.makedirs(f"observe{observe_index}/genome{idx}", exist_ok=True)
@@ -48,6 +54,9 @@ def eval_genomes(genomes, config):
         break_flag = False
         if config.enable_evaluation_by_complexity:
             fs = []
+        
+        num_nodes = []
+        num_conns = []
         for i in task_config["schedule"]:
             task = create_task(task_config["tasks"][i])
             if observing:
@@ -69,6 +78,8 @@ def eval_genomes(genomes, config):
                     break_flag = True
                     break
                 inputs = net3.activate(task.get_output())
+                num_conns.append(len(net3.conns))
+                num_nodes.append(len(net3.nodes))
                 task.update(inputs)
                 
                 if config.enable_evaluation_by_complexity:
@@ -98,6 +109,11 @@ def eval_genomes(genomes, config):
             else:
                 genome.fitness += task.fitness()
         
+        num_conns = np.array(num_conns[::config.genome_config.num_develop_steps])
+        num_nodes = np.array(num_nodes[::config.genome_config.num_develop_steps])
+        conn_complexities[idx] = calc_complexity(num_conns)
+        node_complexities[idx] = calc_complexity(num_nodes)
+        
         if observing:
             with open(f"observe{observe_index}/genome{idx}/other.json", "w") as f:
                 f.write(json.dumps({
@@ -123,8 +139,10 @@ def eval_genomes(genomes, config):
     config.fitness_history["maxes"].append(scale(max(genome.fitness for _, genome in genomes), config.fitness_history["fitness_min"], config.fitness_history["fitness_max"]))
     config.fitness_history["means"].append(scale(sum(genome.fitness for _, genome in genomes) / len(genomes), config.fitness_history["fitness_min"], config.fitness_history["fitness_max"]))
     config.fitness_history["mins"].append(scale(min(genome.fitness for _, genome in genomes), config.fitness_history["fitness_min"], config.fitness_history["fitness_max"]))
+    config.fitness_history["all"].append([genome.fitness for _, genome in genomes])
+    config.network_history["node"].append(node_complexities)
+    config.network_history["conn"].append(conn_complexities)
     config.generation_step += 1
-
 
 def run(config, task, out_dir):
     with open(task, "r") as f:
@@ -137,7 +155,12 @@ def run(config, task, out_dir):
     config.fitness_history = {
         "maxes" : [],
         "means" : [],
-        "mins" : []
+        "mins" : [],
+        "all" : []
+    }
+    config.network_history = {
+        "node" : [],
+        "conn" : []
     }
     mn, mx = 0, 0
     for i in config.task_config["schedule"]:
@@ -228,6 +251,8 @@ def run(config, task, out_dir):
         pass
     with open("fitness.json", "w") as f:
         f.write(json.dumps(config.fitness_history))
+    with open("network_complexity.json", "w") as f:
+        f.write(json.dumps(config.network_history))
 
     visualize.plot_stats(stats, ylog=False, view=False)
     visualize.plot_species(stats, view=False)
