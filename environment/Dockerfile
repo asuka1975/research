@@ -14,9 +14,11 @@ RUN apt autoremove -y
 RUN groupadd -g $GID $GROUPNAME && \
     useradd -m -s /bin/bash -u $UID -g $GID $USERNAME
 RUN mkdir /opt/app/data
-COPY scheduler.py /opt/app/
 RUN chown -R $USERNAME:$GROUPNAME /opt/app
 USER $USERNAME
 RUN pip install neat-python bson graphviz matplotlib numpy numba
+
+COPY scheduler.py /opt/app/
+COPY config/ /opt/app/config/
 
 ENTRYPOINT ["python3", "scheduler.py"]

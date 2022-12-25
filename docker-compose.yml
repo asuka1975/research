@@ -62,6 +62,9 @@ services:
       - type: bind
         source: "./schedule"
         target: "/opt/app/schedule"
+      - type: bind
+        source: "./log"
+        target: "/opt/app/log"
     restart: always
   webui_backend:
     build:

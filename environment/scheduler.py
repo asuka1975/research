@@ -5,6 +5,8 @@ import os
 import shutil
 import glob
 import multiprocessing
+import logging
+import logging.config
 
 def monitor(schedule, queue):
     while True:
@@ -28,6 +30,10 @@ def monitor(schedule, queue):
         time.sleep(60)
 
 def main():
+    logging.config.fileConfig('/opt/app/config/logger.conf', disable_existing_loggers=False)
+    logger = logging.getLogger("scheduler")
+    logger.info("environment start")
+    
     while True:
         with open("/opt/app/schedule/schedule.json", "r") as f:
             schedule = json.load(f)
@@ -50,6 +56,7 @@ def main():
         queue = multiprocessing.Queue()
         process = multiprocessing.Process(target=monitor, args=(s, queue))
         process.start()
+        logger.info("[%s] are submitted", ", ".join(f"({setting}, {task})" for setting, task in s["settings"]))
         subprocess.run(["python3", "scripts/parallel_repeat.py", str(s["epoch"]), str(s["parallel"])], stdout=subprocess.DEVNULL)
         subprocess.run(["python3", "scripts/archive.py"], stdout=subprocess.DEVNULL)
 
