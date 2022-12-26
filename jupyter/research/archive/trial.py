@@ -40,6 +40,11 @@ class Trial:
             j = json.load(f)
             return j
 
+    def solver_change(self):
+        with open(f"analysis/{self.root}/{self.directory}network_complexity.json", "r") as f:
+            j = json.load(f)
+            return j
+
     def genome(self, index):
         return genome.Genome(self, index)
 
