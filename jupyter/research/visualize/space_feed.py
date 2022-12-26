@@ -19,7 +19,7 @@ from .widgets import MediaPlayer
     
 class SpaceFeed:
     def __new__(cls, observe: Observe, task_index):
-        field = figure(title="field (step=0)", plot_width=500, plot_height=500)
+        field = figure(title="field (step=0)", width=500, height=500)
         with open(f"unuse_setting/{observe.trial.experiment}.json") as f:
             cfg = json.load(f)
         setting = cfg["tasks"]["tasks"][cfg["tasks"]["schedule"][task_index]]["setting"]
@@ -39,7 +39,7 @@ class SpaceFeed:
 
         approaching = field.line([t0["position"]["x"], l[0][0]], [t0["position"]["y"], l[0][1]], line_dash="4 4")
 
-        inout = figure(plot_width=270, plot_height=250)
+        inout = figure(width=270, height=250)
         inout.x_range = Range1d(0, 1)
         inout.y_range = Range1d(0, 1)
         inout.xgrid.visible = False
@@ -50,7 +50,7 @@ class SpaceFeed:
         switching = inout.scatter(x=[0.75, 0.75], y=[0.75, 0.25], size=10, fill_color=["white", "white"], line_color="black")
         inout.text([0.1, 0.1], [0.7125, 0.2125], text=["input_switched", "output_switched"])
 
-        feed_plot = figure(plot_width=270, plot_height=250, x_range=FactorRange(factors=["feed", "poizon"]))
+        feed_plot = figure(width=270, height=250, x_range=FactorRange(factors=["feed", "poizon"]))
         feed_plot.y_range = Range1d(0, max(setting["num_feeds"], setting["num_poisons"]) + 1)
         feed_bar = feed_plot.vbar(x=["feed", "poizon"], top=[0, 0], width=0.9)
 

@@ -24,7 +24,7 @@ class CartPole:
             cfg = json.load(f)
         setting = cfg["tasks"][cfg["schedule"][task_index]]["setting"]
 
-        field = figure(title="field (step=0)", plot_width=500, plot_height=500)
+        field = figure(title="field (step=0)", width=500, height=500)
         field.x_range = Range1d(-1, 1)
         field.y_range = Range1d(-1, 1)
 
@@ -63,7 +63,7 @@ class BrokenPoleCartPole:
             cfg = json.load(f)
         setting = cfg["tasks"][cfg["schedule"][task_index]]["setting"]
 
-        field = figure(title="field (step=0)", plot_width=500, plot_height=500)
+        field = figure(title="field (step=0)", width=500, height=500)
         field.x_range = Range1d(-1, 1)
         field.y_range = Range1d(-1, 1)
 
@@ -108,7 +108,7 @@ class DoublePoleCartPole:
             cfg = json.load(f)
         setting = cfg["tasks"][cfg["schedule"][task_index]]["setting"]
 
-        field = figure(title="field (step=0)", plot_width=500, plot_height=500)
+        field = figure(title="field (step=0)", width=500, height=500)
         field.x_range = Range1d(-1, 1)
         field.y_range = Range1d(-1, 1)
 
@@ -153,7 +153,7 @@ class StochasticCartPole:
             cfg = json.load(f)
         setting = cfg["tasks"][cfg["schedule"][task_index]]["setting"]
 
-        field = figure(title="field (step=0)", plot_width=500, plot_height=500)
+        field = figure(title="field (step=0)", width=500, height=500)
         field.x_range = Range1d(-1, 1)
         field.y_range = Range1d(-1, 1)
 

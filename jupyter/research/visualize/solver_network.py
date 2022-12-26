@@ -48,7 +48,7 @@ class SolverNetworkView:
         py0 = [yscaler(y) for y in py0]
         energy0 = [RdBu11[int(10 * e)] if not math.isnan(e) else "#000000" for e in energy0]
 
-        self = figure(title="solver network", plot_width=500, plot_height=500, output_backend="webgl")
+        self = figure(title="solver network", width=500, height=500, output_backend="webgl")
         if xrange is not None:
             self.x_range=Range1d(*xrange)
         if yrange is not None:
