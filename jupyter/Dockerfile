@@ -3,10 +3,10 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /opt/app
 
-ARG UID=1000
-ARG GID=1000
-ARG USERNAME=shikina
-ARG GROUPNAME=shikina
+ARG UID
+ARG GID
+ARG USERNAME
+ARG GROUPNAME
 
 RUN apt update && apt upgrade -y && apt install pixz firefox-geckodriver python3-pip -y
 
@@ -23,6 +23,6 @@ RUN pip install numpy pandas notebook ipywidgets bokeh bson selenium networkx sc
 
 RUN mkdir /opt/app/analysis
 
-RUN mkdir /home/shikina/.jupyter/
-COPY .jupyter/ /home/shikina/.jupyter/
-ENTRYPOINT /home/shikina/.local/bin/jupyter notebook 
+RUN mkdir /home/$USERNAME/.jupyter/
+COPY .jupyter/ /home/$USERNAME/.jupyter/
+ENTRYPOINT /home/$USERNAME/.local/bin/jupyter notebook 

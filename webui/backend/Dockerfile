@@ -10,10 +10,10 @@ FROM python:3.8-slim-buster as runner
 COPY --from=builder /usr/local/lib/python3.8/site-packages /usr/local/lib/python3.8/site-packages
 COPY --from=builder /usr/local/bin/uwsgi /usr/local/bin/uwsgi
 
-ARG UID=1000
-ARG GID=1000
-ARG USERNAME=shikina
-ARG GROUPNAME=shikina
+ARG UID
+ARG GID
+ARG USERNAME
+ARG GROUPNAME
 
 RUN groupadd -g $GID $GROUPNAME && \
     useradd -m -s /bin/bash -u $UID -g $GID $USERNAME
