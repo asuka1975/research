@@ -58,6 +58,13 @@ def main():
         process.start()
         logger.info("[%s] are submitted", ", ".join(f"({setting}, {task})" for setting, task in s["settings"]))
         subprocess.run(["python3", "scripts/parallel_repeat.py", str(s["epoch"]), str(s["parallel"])], stdout=subprocess.DEVNULL)
+
+        num_expected_trials = [s["epoch"] * s["parallel"] for _ in s["settings"]]
+        num_real_trials = [len(glob.glob(f"/opt/app/data/{config}-{task}/*/fitness.json")) for config, task in s["settings"]]
+        for i, (config, task) in enumerate(s["settings"]):
+            if num_expected_trials[i] != num_real_trials[i]:
+                logger.warning("%s; %d trials have dropped out", f"({config}, {task})", num_expected_trials[i] - num_real_trials[i])
+        
         subprocess.run(["python3", "scripts/archive.py"], stdout=subprocess.DEVNULL)
 
         queue.put(False)
