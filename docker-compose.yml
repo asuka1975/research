@@ -69,6 +69,11 @@ services:
   webui_backend:
     build:
       context: webui/backend/
+      args:
+        UID: ${UID}
+        GID: ${GID}
+        USERNAME: ${UNAME}
+        GROUPNAME: ${GNAME}
     volumes:
       - type: bind
         source: "./settings"
