@@ -3,7 +3,7 @@ set -eu
 
 mkdir cli
 python3 -m venv .venv
-TEST=$(cat << EOF
+PUSH_SCHEDULE_CONTENT=$(cat << EOF
 
 import sys
 import json
@@ -19,7 +19,7 @@ for j in sys.argv[1:]:
         rd.rpush("schedule", json.dumps(task))
 EOF
 )
-echo "$TEST" > ./cli/push-schedule
+echo "$PUSH_SCHEDULE_CONTENT" > ./cli/push-schedule
 sed -i "1i#!$(pwd)\\/.venv/bin/python" cli/push-schedule
 sudo chmod +x cli/push-schedule
 

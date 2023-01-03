@@ -36,7 +36,7 @@ def main():
     logger = logging.getLogger("scheduler")
     logger.info("environment start")
 
-    pool = redis.ConnectionPool(host="localhost", port=6379, db=0)
+    pool = redis.ConnectionPool(host="redis", port=6379, db=0)
     rd = redis.Redis(connection_pool=pool)
     
     while True:
