@@ -13,7 +13,6 @@ import redis
 pool = redis.ConnectionPool(host='localhost', port=6379, db=0)
 rd = redis.Redis(connection_pool=pool)
 
-print(rd.get("sample").decode("utf-8"))
 for j in sys.argv[1:]:
     for task in json.loads(j):
         rd.rpush("schedule", json.dumps(task))
