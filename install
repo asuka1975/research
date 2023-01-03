@@ -44,4 +44,4 @@ sudo chmod +x cli/get-schedule
 
 source .venv/bin/activate
 python -m pip install -U pip
-python -m pip install redis
+python -m pip install redis tabulate
