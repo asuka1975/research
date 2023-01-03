@@ -37,7 +37,7 @@ print(tabulate.tabulate(contents, headers, tablefmt="grid"))
 EOF
 )
 echo "$GET_SCHEDULE_CONTENT" > ./cli/get-schedule
-sed -i "1i#!$(pwd)\\/.venv/bin/python" cli/push-schedule
+sed -i "1i#!$(pwd)\\/.venv/bin/python" cli/get-schedule
 
 sudo chmod +x cli/push-schedule
 sudo chmod +x cli/get-schedule
