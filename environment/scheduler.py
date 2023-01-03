@@ -8,6 +8,8 @@ import multiprocessing
 import logging
 import logging.config
 
+import redis
+
 def monitor(schedule, queue):
     while True:
         monitor_dict = {}
@@ -33,17 +35,16 @@ def main():
     logging.config.fileConfig('/opt/app/config/logger.conf', disable_existing_loggers=False)
     logger = logging.getLogger("scheduler")
     logger.info("environment start")
+
+    pool = redis.ConnectionPool(host="localhost", port=6379, db=0)
+    rd = redis.Redis(connection_pool=pool)
     
     while True:
-        with open("/opt/app/schedule/schedule.json", "r") as f:
-            schedule = json.load(f)
-        if len(schedule) == 0:
+        if rd.llen("schedule") == 0:
             time.sleep(600)
             continue
 
-        s = schedule.pop(-1)
-        with open("/opt/app/schedule/schedule.json", "w") as f:
-            f.write(json.dumps(schedule, indent=4))
+        s = json.loads(rd.rpop("schedule").decode("utf-8"))
         for file in glob.glob("/opt/app/settings/*"):
             os.remove(file)
         for setting, task in s["settings"]:
