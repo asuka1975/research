@@ -20,7 +20,27 @@ EOF
 )
 echo "$PUSH_SCHEDULE_CONTENT" > ./cli/push-schedule
 sed -i "1i#!$(pwd)\\/.venv/bin/python" cli/push-schedule
+
+GET_SCHEDULE_CONTENT=$(cat << EOF
+
+import json
+
+import redis
+import tabulate
+
+pool = redis.ConnectionPool(host='localhost', port=6379, db=0)
+rd = redis.Redis(connection_pool=pool)
+
+headers = ["parallel", "epoch", "settings"]
+contents = [list(json.loads(content.decode("utf-8")).values()) for content in rd.lrange("schedule", 0, rd.llen("schedule"))]
+print(tabulate.tabulate(contents, headers, tablefmt="grid"))
+EOF
+)
+echo "$GET_SCHEDULE_CONTENT" > ./cli/get-schedule
+sed -i "1i#!$(pwd)\\/.venv/bin/python" cli/push-schedule
+
 sudo chmod +x cli/push-schedule
+sudo chmod +x cli/get-schedule
 
 source .venv/bin/activate
 python -m pip install -U pip
