@@ -7,29 +7,34 @@ import glob
 import multiprocessing
 import logging
 import logging.config
+import configparser
 
 import redis
 
-def monitor(schedule, queue):
+def monitor(schedule, rds, queue):
+    rds.hmset("monitor", *[v for config, task in schedule["settings"] for v in [f"{config}-{task}", 0]])
     while True:
         monitor_dict = {}
         for config, task in schedule["settings"]:
-            with open(f"/opt/app/unuse_setting/{config}", "r") as f:
-                contents = f.readlines()
-            observe_tick = [int(line.split("=")[1]) for line in contents if "observe_tick" in line][0]
-            num_generations = [int(line.split("=")[1]) for line in contents if "num_generations" in line][0]
+            cfg = configparser.ConfigParser()
+            cfg.read(f"/opt/app/unuse_setting/{config}")
+            observe_tick = cfg["NEAT"].getint("observe_tick")
+            num_generations = cfg["NEAT"].getint("num_generations")
             observe_epochs = num_generations // observe_tick + 1
+            percent = int(len(glob.glob(f"/opt/app/data/{config}-{task}/*/observe*")) * 100 / (observe_epochs * schedule["parallel"] * schedule["epoch"]))
             monitor_dict[f"{config}-{task}"] = {
-                "progress" : int(len(glob.glob(f"/opt/app/data/{config}-{task}/*/observe*")) * 100 / (observe_epochs * schedule["parallel"] * schedule["epoch"]))
+                "progress" : percent
             }
             with open("/opt/app/schedule/monitor.json", "w") as f:
                 f.write(json.dumps(monitor_dict))
+            rds.hset("monitor", f"{config}-{task}", percent)
         try:
             queue.get(timeout=1)
             break
         except:
             pass
         time.sleep(60)
+    rds.delete("monitor")
 
 def main():
     logging.config.fileConfig('/opt/app/config/logger.conf', disable_existing_loggers=False)
@@ -37,7 +42,7 @@ def main():
     logger.info("environment start")
 
     pool = redis.ConnectionPool(host="redis", port=6379, db=0)
-    rd = redis.Redis(connection_pool=pool)
+    rd = redis.StrictRedis(connection_pool=pool)
     
     while True:
         if rd.llen("schedule") == 0:
@@ -55,7 +60,7 @@ def main():
             f.write(json.dumps(s))
 
         queue = multiprocessing.Queue()
-        process = multiprocessing.Process(target=monitor, args=(s, queue))
+        process = multiprocessing.Process(target=monitor, args=(s, redis.StrictRedis(connection_pool=pool), queue))
         process.start()
         logger.info("[%s] are submitted", ", ".join(f"({setting}, {task})" for setting, task in s["settings"]))
         subprocess.run(["python3", "scripts/parallel_repeat.py", str(s["epoch"]), str(s["parallel"])], stdout=subprocess.DEVNULL)
