@@ -11,7 +11,7 @@ import json
 import redis
 
 pool = redis.ConnectionPool(host='localhost', port=6379, db=0)
-rd = redis.Redis(connection_pool=pool)
+rd = redis.StrictRedis(connection_pool=pool)
 
 for j in sys.argv[1:]:
     for task in json.loads(j):
@@ -29,7 +29,7 @@ import redis
 import tabulate
 
 pool = redis.ConnectionPool(host='localhost', port=6379, db=0)
-rd = redis.Redis(connection_pool=pool)
+rd = redis.StrictRedis(connection_pool=pool)
 
 headers = ["parallel", "epoch", "settings"]
 contents = [list(json.loads(content.decode("utf-8")).values()) for content in rd.lrange("schedule", 0, rd.llen("schedule"))]
