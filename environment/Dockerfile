@@ -16,7 +16,7 @@ RUN groupadd -g $GID $GROUPNAME && \
 RUN mkdir /opt/app/data
 RUN chown -R $USERNAME:$GROUPNAME /opt/app
 USER $USERNAME
-RUN pip install neat-python bson graphviz matplotlib numpy numba
+RUN pip install neat-python bson graphviz matplotlib numpy numba redis
 
 COPY scheduler.py /opt/app/
 COPY config/ /opt/app/config/

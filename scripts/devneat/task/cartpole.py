@@ -790,6 +790,9 @@ class BrokenPoleCartPoleRealFitness:
         self.x = 0
         self.x_dot = 0
         self.x_dot2 = 0
+        self.scaler = lambda x: x
+        if "scaler" in config:
+            self.scaler = eval(config["scaler"])
 
         # broken states
         self.pole_rate = random() * 0.4 + 0.3
@@ -817,10 +820,10 @@ class BrokenPoleCartPoleRealFitness:
         f = inputs[0]
         if not self.broken:
             self.x, self.x_dot, self.x_dot2, self.theta, self.theta_dot, self.theta_dot2 = update2(self.dt, self.g, self.cart_weight, self.pole_weight, self.pole_length, self.j, self.resistance, self.theta, self.theta_dot, self.theta_dot2, self.x, self.x_dot, self.x_dot2, f)
-            self.fitness_value += cos(self.theta) * 0.5 + 0.5
+            self.fitness_value += self.scaler(cos(self.theta) * 0.5 + 0.5)
         else:
             self.x, self.x_dot, self.x_dot2, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2 = update3_broken(self.dt, self.g, self.cart_weight, self.pole1_weight, self.pole1_length, self.pole2_weight, self.pole2_length, self.j1, self.j2, self.resistance, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2, self.x, self.x_dot, self.x_dot2, f)
-            self.fitness_value += (self.pole_rate * (cos(self.theta1) * 0.5 + 0.5)) + ((1 - self.pole_rate) * (cos(self.theta2) * 0.5 + 0.5))
+            self.fitness_value += (self.pole_rate * self.scaler(cos(self.theta1) * 0.5 + 0.5)) + ((1 - self.pole_rate) * self.scaler(cos(self.theta2) * 0.5 + 0.5))
 
         self.steps += 1
 
@@ -901,6 +904,9 @@ class DoublePoleCartPoleRealFitness:
         self.x = 0
         self.x_dot = 0
         self.x_dot2 = 0
+        self.scaler = lambda x: x
+        if "scaler" in config:
+            self.scaler = eval(config["scaler"])
 
         # double states
         self.pole1_weight = config["pole1_weight"]
@@ -927,10 +933,10 @@ class DoublePoleCartPoleRealFitness:
         f = inputs[0]
         if not self.double:
             self.x, self.x_dot, self.x_dot2, self.theta, self.theta_dot, self.theta_dot2 = update2(self.dt, self.g, self.cart_weight, self.pole_weight, self.pole_length, self.j, self.resistance, self.theta, self.theta_dot, self.theta_dot2, self.x, self.x_dot, self.x_dot2, f)
-            self.fitness_value += cos(self.theta) * 0.5 + 0.5
+            self.fitness_value += self.scaler(cos(self.theta) * 0.5 + 0.5)
         else:
             self.x, self.x_dot, self.x_dot2, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2 = update3_double(self.dt, self.g, self.cart_weight, self.pole1_weight, self.pole1_length, self.pole2_weight, self.pole2_length, self.j1, self.j2, self.resistance, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2, self.x, self.x_dot, self.x_dot2, f)
-            self.fitness_value += ((self.pole1_length * (cos(self.theta1) * 0.5 + 0.5)) + (self.pole2_length * (cos(self.theta2) * 0.5 + 0.5))) / (self.pole1_length + self.pole2_length)
+            self.fitness_value += ((self.pole1_length * self.scaler(cos(self.theta1) * 0.5 + 0.5)) + (self.pole2_length * self.scaler(cos(self.theta2) * 0.5 + 0.5))) / (self.pole1_length + self.pole2_length)
 
         self.steps += 1
 
@@ -1026,6 +1032,9 @@ class StochasticCartPoleRealFitness:
         self.theta2 = random() * (config["initial_theta"][1] - config["initial_theta"][0]) + config["initial_theta"][0]
         self.theta2_dot = 0
         self.theta2_dot2 = 0
+        self.scaler = lambda x: x
+        if "scaler" in config:
+            self.scaler = eval(config["scaler"])
 
         self.num_steps = config["num_steps"]
         self.steps = 0
@@ -1040,13 +1049,13 @@ class StochasticCartPoleRealFitness:
         f = inputs[0]
         if self.pole_state == "single":
             self.x, self.x_dot, self.x_dot2, self.theta, self.theta_dot, self.theta_dot2 = update2(self.dt, self.g, self.cart_weight, self.pole_weight, self.pole_length, self.j, self.resistance, self.theta, self.theta_dot, self.theta_dot2, self.x, self.x_dot, self.x_dot2, f)
-            self.fitness_value += cos(self.theta) * 0.5 + 0.5
+            self.fitness_value += self.scaler(cos(self.theta) * 0.5 + 0.5)
         elif self.pole_state == "double":
             self.x, self.x_dot, self.x_dot2, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2 = update3_double(self.dt, self.g, self.cart_weight, self.pole1_weight, self.pole1_length, self.pole2_weight, self.pole2_length, self.j1, self.j2, self.resistance, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2, self.x, self.x_dot, self.x_dot2, f)
-            self.fitness_value += ((self.pole1_length * (cos(self.theta1) * 0.5 + 0.5)) + (self.pole2_length * (cos(self.theta2) * 0.5 + 0.5))) / (self.pole1_length + self.pole2_length)
+            self.fitness_value += ((self.pole1_length * self.scaler(cos(self.theta1) * 0.5 + 0.5)) + (self.pole2_length * self.scaler(cos(self.theta2) * 0.5 + 0.5))) / (self.pole1_length + self.pole2_length)
         elif self.pole_state == "broken":
             self.x, self.x_dot, self.x_dot2, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2 = update3_broken(self.dt, self.g, self.cart_weight, self.pole1_weight, self.pole1_length, self.pole2_weight, self.pole2_length, self.j1, self.j2, self.resistance, self.theta1, self.theta1_dot, self.theta1_dot2, self.theta2, self.theta2_dot, self.theta2_dot2, self.x, self.x_dot, self.x_dot2, f)
-            self.fitness_value += (self.pole_rate * (cos(self.theta1) * 0.5 + 0.5)) + ((1 - self.pole_rate) * (cos(self.theta2) * 0.5 + 0.5))
+            self.fitness_value += (self.pole_rate * self.scaler(cos(self.theta1) * 0.5 + 0.5)) + ((1 - self.pole_rate) * self.scaler(cos(self.theta2) * 0.5 + 0.5))
             
         self.steps += 1
 

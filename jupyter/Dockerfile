@@ -25,4 +25,5 @@ RUN mkdir /opt/app/analysis
 
 RUN mkdir /home/$USERNAME/.jupyter/
 COPY .jupyter/ /home/$USERNAME/.jupyter/
-ENTRYPOINT /home/$USERNAME/.local/bin/jupyter notebook 
+ENV UNAME=$USERNAME
+ENTRYPOINT /home/$UNAME/.local/bin/jupyter notebook 
