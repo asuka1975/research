@@ -12,7 +12,7 @@ import configparser
 import redis
 
 def monitor(schedule, rds, queue):
-    rds.hmset("monitor", { f"{config}-{task}" : 0 for config, task in schedule["settings"] })
+    rds.hset("monitor", mapping={ f"{config}-{task}" : 0 for config, task in schedule["settings"] })
     while True:
         monitor_dict = {}
         for config, task in schedule["settings"]:
