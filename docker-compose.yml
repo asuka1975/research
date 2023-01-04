@@ -66,6 +66,9 @@ services:
         source: "./log"
         target: "/opt/app/log"
     restart: always
+    depends_on:
+      redis:
+        condition: service_healthy
   webui_backend:
     build:
       context: webui/backend/
@@ -87,6 +90,9 @@ services:
     ports:
       - "51223:51223"
     restart: always
+    depends_on:
+      redis:
+        condition: service_healthy
   webui_frontend:
     build:
       context: webui/frontend/
@@ -101,6 +107,11 @@ services:
     image: "redis:latest"
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+        interval: 1s
+        timeout: 30s
+        retries: 30
     volumes:
       - type: bind
         source: "./redis"
