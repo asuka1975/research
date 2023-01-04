@@ -5,6 +5,7 @@ import logging
 import os
 import json
 
+import redis
 
 app = Flask(__name__)
 app.config["JSON_AS_ASCII"] = False
@@ -12,6 +13,9 @@ app.logger.setLevel(logging.INFO)
 log_handler = logging.FileHandler("logs/server.log")
 log_handler.setLevel(logging.INFO)
 app.logger.addHandler(log_handler)
+
+pool = redis.ConnectionPool(host="redis", port=6379, db=0)
+rds = redis.StrictRedis(connection_pool=pool)
 
 @app.route("/", methods=["GET"])
 def get_settings():
@@ -45,25 +49,21 @@ def create_setting():
 
 @app.route("/schedule", methods=["GET"])
 def get_schedule():
-    filepath = "/opt/app/schedule/schedule.json"
-    with open(filepath, "r") as f:
-        return f.read()
+    global rds
+    return json.dumps([json.loads(v) for v in rds.lrange("schedule", 0, rds.llen("schedule"))])
 
 @app.route("/schedule", methods=["POST"])
 def set_schedule():
+    global rds
     data = json.loads(request.get_data().decode("utf-8"))
-    filepath = "/opt/app/schedule/schedule.json"
-    with open(filepath, "w") as f:
-        f.write(json.dumps(data, indent=4))
     return ""
 
 @app.route("/monitor", methods=["GET"])
 def get_monitor():
-    filepath = "/opt/app/schedule/monitor.json"
-    with open(filepath, "r") as f:
-        j = json.load(f)
+    global rds
+    rds.hgetall("monitor")
     return json.dumps([
-        { "title" : setting, "value" : v["progress"], "unit" : "%" } for setting, v in j.items()
+        { "title" : setting.decode("utf-8"), "value" : v.decode("utf-8"), "unit" : "%" } for setting, v in rds.hgetall("monitor").items()
     ])
     
 
