@@ -30,9 +30,11 @@ import tabulate
 
 pool = redis.ConnectionPool(host='localhost', port=6379, db=0)
 rd = redis.StrictRedis(connection_pool=pool)
+omit = lambda s: s if len(s) < 65 else s[:62] + "..."
 
 headers = ["parallel", "epoch", "settings"]
 contents = [list(json.loads(content.decode("utf-8")).values()) for content in rd.lrange("schedule", 0, rd.llen("schedule"))]
+contents = [[l[0], l[1], "\n".join([f"[{omit(config)}, {task}]" for config, task in l[2]])] for l in contents]
 print(tabulate.tabulate(contents, headers, tablefmt="grid"))
 EOF
 )
@@ -48,9 +50,10 @@ import tabulate
 
 pool = redis.ConnectionPool(host='localhost', port=6379, db=0)
 rd = redis.StrictRedis(connection_pool=pool)
+omit = lambda s: s if len(s) < 65 else s[:62] + "..."
 
 headers = ["settings", "progress"]
-contents = [[k.decode("utf-8"), v.decode("utf-8")] for k, v in rd.hgetall("monitor").items()]
+contents = [[omit(k.decode("utf-8")), v.decode("utf-8")] for k, v in rd.hgetall("monitor").items()]
 print(tabulate.tabulate(contents, headers, tablefmt="grid"))
 EOF
 )
